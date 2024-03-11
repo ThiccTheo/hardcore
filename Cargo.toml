@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 bevy = { version = "0.13.0", features = ["dynamic_linking"] }
 bevy_rapier2d = "0.25.0"
+leafwing-input-manager = "0.13.3"
 
 # Enable a small amount of optimization in debug mode
 [profile.dev]

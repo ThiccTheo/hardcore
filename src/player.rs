@@ -1,4 +1,7 @@
-use {super::game_state::GameState, bevy::prelude::*};
+use {
+    super::{game_state::GameState, sprite_flip::Flippable},
+    bevy::prelude::*,
+};
 
 pub struct PlayerPlugin;
 
@@ -11,9 +14,32 @@ impl Plugin for PlayerPlugin {
 #[derive(Component)]
 pub struct Player;
 
-fn spawn_player(mut cmds: Commands) {
-    cmds.spawn((Player, SpriteBundle::default()))
-        .with_children(|parent| {
-            parent.spawn(Camera2dBundle::default());
-        });
+fn spawn_player(
+    mut cmds: Commands,
+    asset_server: Res<AssetServer>,
+    mut tex_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
+) {
+    cmds.spawn((
+        Player,
+        SpriteSheetBundle {
+            texture: asset_server.load("player.png"),
+            atlas: TextureAtlas {
+                layout: tex_atlas_layouts.add(TextureAtlasLayout::from_grid(
+                    Vec2::splat(16.),
+                    4,
+                    2,
+                    None,
+                    None,
+                )),
+                index: 0,
+            },
+            ..default()
+        },
+        Flippable::default(),
+    ))
+    .with_children(|parent| {
+        let mut cam = Camera2dBundle::default();
+        cam.projection.scale /= 4.;
+        parent.spawn(cam);
+    });
 }
