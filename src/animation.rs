@@ -8,7 +8,7 @@ impl Plugin for AnimationPlugin {
     }
 }
 
-#[derive(Component, PartialEq)]
+#[derive(Component, PartialEq, Default)]
 pub struct AnimationIndices {
     pub first: usize,
     pub last: usize,
@@ -32,7 +32,9 @@ fn animate_sprites(
     for (animation_indices, mut animation_timer, mut tex_atlas) in animation_qry.iter_mut() {
         animation_timer.tick(time.delta());
         if animation_timer.just_finished() {
-            tex_atlas.index = (tex_atlas.index + 1) % (animation_indices.last + 1);
+            tex_atlas.index = animation_indices.first
+                + (tex_atlas.index + 1 - animation_indices.first)
+                    % (animation_indices.last + 1 - animation_indices.first);
         }
     }
 }
