@@ -37,6 +37,7 @@ impl Plugin for PlayerPlugin {
 #[derive(Component, Default)]
 pub struct Player {
     pub can_jump: bool,
+    pub is_attacking: bool,
 }
 
 #[derive(Actionlike, Hash, Clone, PartialEq, Eq, Reflect)]
@@ -129,6 +130,7 @@ fn discrete_player_input(
     }
     if player_actions.just_pressed(&PlayerAction::Attack) {
         player_flippable.flip_x = player_xform.translation.x > mouse_pos.x;
+        //player.is_attacking = true;
     }
 }
 
@@ -174,21 +176,21 @@ fn continuous_player_input(
 fn update_player_animation(
     mut player_qry: Query<
         (
+            &mut Player,
             &mut AnimationIndices,
             &TextureAtlas,
             &Grounded,
             &NetDirection,
-            &ActionState<PlayerAction>,
         ),
         With<Player>,
     >,
 ) {
     let (
+        mut player,
         mut player_animation_indices,
         player_tex_atlas,
         player_grounded,
         player_net_dir,
-        player_actions,
     ) = player_qry.single_mut();
 
     let jumping = AnimationIndices { first: 3, last: 3 };
@@ -196,22 +198,22 @@ fn update_player_animation(
     let idling = AnimationIndices { first: 0, last: 0 };
     let attacking = AnimationIndices { first: 4, last: 5 };
 
-    let attack_in_progress = *player_animation_indices == attacking
+    player.is_attacking = *player_animation_indices == attacking
         && player_animation_indices.last != player_tex_atlas.index;
 
-    if player_actions.pressed(&PlayerAction::Attack) {
+    if player.is_attacking {
         if *player_animation_indices != attacking {
             *player_animation_indices = attacking;
         }
     } else if !player_grounded.0 {
-        if *player_animation_indices != jumping && !attack_in_progress {
+        if *player_animation_indices != jumping && !player.is_attacking {
             *player_animation_indices = jumping;
         }
     } else if player_net_dir.x != 0 {
-        if *player_animation_indices != walking && !attack_in_progress {
+        if *player_animation_indices != walking && !player.is_attacking {
             *player_animation_indices = walking;
         }
-    } else if *player_animation_indices != idling && !attack_in_progress {
+    } else if *player_animation_indices != idling && !player.is_attacking {
         *player_animation_indices = idling;
     }
 }
