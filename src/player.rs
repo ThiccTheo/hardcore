@@ -112,12 +112,23 @@ fn spawn_player(
 }
 
 fn discrete_player_input(
-    mut player_qry: Query<(&mut Player, &ActionState<PlayerAction>, &Grounded)>,
+    mut player_qry: Query<(
+        &mut Player,
+        &Transform,
+        &ActionState<PlayerAction>,
+        &Grounded,
+        &mut Flippable,
+    )>,
+    mouse_pos: Res<MousePosition>,
 ) {
-    let (mut player, player_actions, player_grounded) = player_qry.single_mut();
+    let (mut player, player_xform, player_actions, player_grounded, mut player_flippable) =
+        player_qry.single_mut();
 
     if player_actions.just_pressed(&PlayerAction::Jump) && player_grounded.0 {
         player.can_jump = true;
+    }
+    if player_actions.just_pressed(&PlayerAction::Attack) {
+        player_flippable.flip_x = player_xform.translation.x > mouse_pos.x;
     }
 }
 
@@ -125,18 +136,15 @@ fn continuous_player_input(
     mut player_qry: Query<(
         &mut Player,
         &ActionState<PlayerAction>,
-        &Transform,
         &mut Velocity,
         &mut NetDirection,
         &mut Grounded,
         &mut Flippable,
     )>,
-    mouse_pos: Res<MousePosition>,
 ) {
     let (
         mut player,
         player_actions,
-        player_xform,
         mut player_vel,
         mut player_net_dir,
         mut player_grounded,
@@ -155,9 +163,6 @@ fn continuous_player_input(
     if player_actions.pressed(&PlayerAction::MoveRight) {
         player_net_dir.x = 1;
         player_flippable.flip_x = false;
-    }
-    if player_actions.pressed(&PlayerAction::Attack) {
-        player_flippable.flip_x = player_xform.translation.x > mouse_pos.x;
     }
     if player.can_jump {
         player.can_jump = false;

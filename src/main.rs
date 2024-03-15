@@ -23,7 +23,7 @@ fn main() {
         .add_plugins((
             DefaultPlugins.set(ImagePlugin::default_nearest()),
             RapierPhysicsPlugin::<NoUserData>::default(),
-            // RapierDebugRenderPlugin::default(),
+            RapierDebugRenderPlugin::default(),
             InputManagerPlugin::<PlayerAction>::default(),
             MousePositionPlugin,
             SpriteFlipPlugin,
