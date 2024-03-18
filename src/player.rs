@@ -38,6 +38,7 @@ impl Plugin for PlayerPlugin {
 pub struct Player {
     pub can_jump: bool,
     pub is_attacking: bool,
+    pub is_jumping: bool,
 }
 
 #[derive(Actionlike, Hash, Clone, PartialEq, Eq, Reflect)]
@@ -125,12 +126,15 @@ fn discrete_player_input(
     let (mut player, player_xform, player_actions, player_grounded, mut player_flippable) =
         player_qry.single_mut();
 
-    if player_actions.just_pressed(&PlayerAction::Jump) && player_grounded.0 {
-        player.can_jump = true;
+    if player_grounded.0 {
+        player.is_jumping = false;
+        if player_actions.just_pressed(&PlayerAction::Jump) {
+            player.can_jump = true;
+        }
     }
     if player_actions.just_pressed(&PlayerAction::Attack) {
         player_flippable.flip_x = player_xform.translation.x > mouse_pos.x;
-        //player.is_attacking = true;
+        player.is_attacking = true;
     }
 }
 
@@ -168,6 +172,7 @@ fn continuous_player_input(
     }
     if player.can_jump {
         player.can_jump = false;
+        player.is_jumping = true;
         player_grounded.0 = false;
         player_vel.linvel.y = 200.;
     }
@@ -178,7 +183,6 @@ fn update_player_animation(
         (
             &mut Player,
             &mut AnimationIndices,
-            &TextureAtlas,
             &Grounded,
             &NetDirection,
         ),
@@ -186,34 +190,30 @@ fn update_player_animation(
     >,
 ) {
     let (
-        mut player,
+        player,
         mut player_animation_indices,
-        player_tex_atlas,
         player_grounded,
         player_net_dir,
     ) = player_qry.single_mut();
 
+    let attacking = AnimationIndices { first: 4, last: 5 };
     let jumping = AnimationIndices { first: 3, last: 3 };
     let walking = AnimationIndices { first: 1, last: 2 };
     let idling = AnimationIndices { first: 0, last: 0 };
-    let attacking = AnimationIndices { first: 4, last: 5 };
-
-    player.is_attacking = *player_animation_indices == attacking
-        && player_animation_indices.last != player_tex_atlas.index;
 
     if player.is_attacking {
         if *player_animation_indices != attacking {
             *player_animation_indices = attacking;
         }
-    } else if !player_grounded.0 {
-        if *player_animation_indices != jumping && !player.is_attacking {
+    } else if player.is_jumping && !player_grounded.0 {
+        if *player_animation_indices != jumping {
             *player_animation_indices = jumping;
         }
-    } else if player_net_dir.x != 0 {
-        if *player_animation_indices != walking && !player.is_attacking {
+    } else if player_net_dir.x != 0 && player_grounded.0 {
+        if *player_animation_indices != walking {
             *player_animation_indices = walking;
         }
-    } else if *player_animation_indices != idling && !player.is_attacking {
+    } else if *player_animation_indices != idling {
         *player_animation_indices = idling;
     }
 }

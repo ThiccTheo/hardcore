@@ -81,16 +81,16 @@ pub fn process_collisions(
             let Some(deets) = collision.toi.details else {
                 continue;
             };
-
             if is_colliding(deets.normal2, threshold, Vec2::X) {
                 vel.linvel.x = 0.;
             }
             if is_colliding(deets.normal2, threshold, Vec2::Y) {
-                if let Some(grounded) = grounded.as_mut() {
-                    grounded.0 = grounded.0 || vel.linvel.y < 0.
-                }
                 vel.linvel.y = 0.;
             }
         }
+        let Some(grounded) = grounded.as_mut() else {
+            continue;
+        };
+        grounded.0 = vel.linvel.y == 0.;
     }
 }
