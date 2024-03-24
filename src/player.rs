@@ -97,20 +97,6 @@ fn spawn_player(
         cam.projection.scale /= 4.;
         parent.spawn(cam);
     });
-
-    // TEMPORARY TEMPORARY TEMPORARY TEMPORARY
-    cmds.spawn((
-        SpriteBundle {
-            sprite: Sprite {
-                color: Color::RED,
-                custom_size: Some(Vec2::new(300., 16.)),
-                ..default()
-            },
-            transform: Transform::from_xyz(0., -30., 1.),
-            ..default()
-        },
-        Collider::cuboid(150., 8.),
-    ));
 }
 
 fn discrete_player_input(
@@ -180,21 +166,12 @@ fn continuous_player_input(
 
 fn update_player_animation(
     mut player_qry: Query<
-        (
-            &mut Player,
-            &mut AnimationIndices,
-            &Grounded,
-            &NetDirection,
-        ),
+        (&mut Player, &mut AnimationIndices, &Grounded, &NetDirection),
         With<Player>,
     >,
 ) {
-    let (
-        player,
-        mut player_animation_indices,
-        player_grounded,
-        player_net_dir,
-    ) = player_qry.single_mut();
+    let (player, mut player_animation_indices, player_grounded, player_net_dir) =
+        player_qry.single_mut();
 
     let attacking = AnimationIndices { first: 4, last: 5 };
     let jumping = AnimationIndices { first: 3, last: 3 };

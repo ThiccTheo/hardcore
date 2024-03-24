@@ -1,9 +1,11 @@
 mod animation;
 mod game_state;
+mod level;
 mod mouse_position;
 mod physics;
 mod player;
 mod sprite_flip;
+mod tile;
 
 use {
     animation::AnimationPlugin,
@@ -11,10 +13,12 @@ use {
     bevy_rapier2d::prelude::*,
     game_state::GameState,
     leafwing_input_manager::prelude::*,
+    level::LevelPlugin,
     mouse_position::MousePositionPlugin,
     physics::PhysicsPlugin,
     player::{PlayerAction, PlayerPlugin},
     sprite_flip::SpriteFlipPlugin,
+    tile::TilePlugin,
 };
 
 fn main() {
@@ -29,7 +33,9 @@ fn main() {
             SpriteFlipPlugin,
             AnimationPlugin,
             PhysicsPlugin,
+            LevelPlugin,
             PlayerPlugin,
+            TilePlugin,
         ))
         .run();
 }
