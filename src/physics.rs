@@ -8,7 +8,7 @@ impl Plugin for PhysicsPlugin {
             FixedUpdate,
             (process_collisions, apply_forces)
                 .chain()
-                .distributive_run_if(in_state(GameState::Playing)),
+                .run_if(in_state(GameState::Playing)),
         );
     }
 }

@@ -4,7 +4,10 @@ pub struct LevelPlugin;
 
 impl Plugin for LevelPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(GameState::Playing), generate_level_layout);
+        app.add_systems(
+            OnEnter(GameState::Playing),
+            generate_level_layout.pipe(spawn_entities),
+        );
     }
 }
 
@@ -22,7 +25,7 @@ bitflags! {
     }
 }
 
-fn generate_level_layout() {
+fn generate_level_layout() -> Vec<Vec<SectorType>> {
     let rows = 4;
     let cols = 4;
     let mut level_layout = vec![vec![SectorType::CLOSED; cols]; rows];
@@ -44,8 +47,6 @@ fn generate_level_layout() {
         level_layout[y + 1][up_sectors[y + 1]] |= SectorType::OPEN_UP;
     }
 
-
-    // move this somewhere else
     let make_inclusive_range = |a: usize, b: usize| {
         if a < b {
             Some(a..=b)
@@ -64,7 +65,9 @@ fn generate_level_layout() {
         } else {
             make_inclusive_range(exit_sector, up_sectors[y])
         };
-        let Some(connected_sectors) = connected_sectors else { continue };
+        let Some(connected_sectors) = connected_sectors else {
+            continue;
+        };
 
         level_layout[y][*connected_sectors.start()] |= SectorType::OPEN_RIGHT;
         level_layout[y][*connected_sectors.end()] |= SectorType::OPEN_LEFT;
@@ -73,5 +76,20 @@ fn generate_level_layout() {
             level_layout[y][x] |= SectorType::OPEN_LEFT | SectorType::OPEN_RIGHT;
         }
     }
-    println!("{:#?}", level_layout);
+    level_layout
+}
+
+fn spawn_entities(In(level_layout): In<Vec<Vec<SectorType>>>) {
+    for (x, y, sector_type) in level_layout.iter().enumerate().flat_map(|(y, row)| {
+        row.iter()
+            .enumerate()
+            .map(move |(x, sector_type)| (x, y, sector_type))
+    }) {
+        // ===== For next time =====
+        // convert (x, y) to cartesian world space
+        // spawn entities at new (x, y) via events
+        // what kind of entities to spawn is based off sector type
+        // sector type can be passed to random function to generate room templates
+        // parse room template array and spawn the mfs
+    }
 }

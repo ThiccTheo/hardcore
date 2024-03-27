@@ -22,7 +22,7 @@ impl Plugin for PlayerPlugin {
                     discrete_player_input,
                     update_player_animation.before(animation::adjust_sprite_indices),
                 )
-                    .distributive_run_if(in_state(GameState::Playing)),
+                    .run_if(in_state(GameState::Playing)),
             )
             .add_systems(
                 FixedUpdate,
