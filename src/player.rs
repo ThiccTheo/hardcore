@@ -2,6 +2,7 @@ use {
     super::{
         animation::{self, AnimationIndices, AnimationTimer},
         game_state::GameState,
+        level,
         mouse_position::MousePosition,
         physics::{self, Acceleration, Grounded, NetDirection, TerminalVelocity},
         sprite_flip::Flippable,
@@ -15,7 +16,11 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(GameState::Playing), spawn_player)
+        app.add_event::<PlayerSpawnEvent>()
+            .add_systems(
+                OnEnter(GameState::Playing),
+                on_player_spawn.after(level::spawn_entities),
+            )
             .add_systems(
                 Update,
                 (
@@ -49,11 +54,20 @@ pub enum PlayerAction {
     Attack,
 }
 
-fn spawn_player(
+#[derive(Event)]
+pub struct PlayerSpawnEvent {
+    pub pos: Vec2,
+}
+
+fn on_player_spawn(
     mut cmds: Commands,
+    mut player_spawn_evr: EventReader<PlayerSpawnEvent>,
     asset_server: Res<AssetServer>,
     mut tex_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
 ) {
+    let Some(PlayerSpawnEvent { pos: player_pos }) = player_spawn_evr.read().next() else {
+        return;
+    };
     cmds.spawn((
         Player::default(),
         InputManagerBundle::<PlayerAction> {
@@ -78,6 +92,7 @@ fn spawn_player(
                 )),
                 index: 0,
             },
+            transform: Transform::from_translation(player_pos.extend(10.)),
             ..default()
         },
         Flippable::default(),

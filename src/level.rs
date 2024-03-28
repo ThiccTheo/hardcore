@@ -1,4 +1,9 @@
-use {super::game_state::GameState, bevy::prelude::*, bitflags::bitflags, rand::Rng};
+use {
+    super::{game_state::GameState, player::PlayerSpawnEvent, tile::TileSpawnEvent},
+    bevy::prelude::*,
+    bitflags::bitflags,
+    rand::Rng,
+};
 
 pub struct LevelPlugin;
 
@@ -13,8 +18,8 @@ impl Plugin for LevelPlugin {
 
 bitflags! {
     #[rustfmt::skip]
-    #[derive(Clone, Debug)]
-    struct SectorType: u8 {
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub struct SectorType: u8 {
         const ENTRANCE   = 0b00100000;
         const EXIT       = 0b00010000;
         const OPEN_UP    = 0b00001000;
@@ -79,17 +84,32 @@ fn generate_level_layout() -> Vec<Vec<SectorType>> {
     level_layout
 }
 
-fn spawn_entities(In(level_layout): In<Vec<Vec<SectorType>>>) {
-    for (x, y, sector_type) in level_layout.iter().enumerate().flat_map(|(y, row)| {
-        row.iter()
+pub fn spawn_entities(
+    In(level_layout): In<Vec<Vec<SectorType>>>,
+    mut player_spawn_evw: EventWriter<PlayerSpawnEvent>,
+    mut tile_spawn_evw: EventWriter<TileSpawnEvent>
+) {
+    let (h, w) = (
+        level_layout.len(),
+        if level_layout.len() > 0 {
+            level_layout[0].len()
+        } else {
+            0
+        },
+    );
+    for (sector_x, sector_y, sector_type) in level_layout.iter().enumerate().flat_map(|(sector_y, sectors)| {
+        sectors.iter()
             .enumerate()
-            .map(move |(x, sector_type)| (x, y, sector_type))
+            .map(move |(sector_x, sector_type)| (sector_x, sector_y, sector_type))
     }) {
-        // ===== For next time =====
-        // convert (x, y) to cartesian world space
-        // spawn entities at new (x, y) via events
-        // what kind of entities to spawn is based off sector type
-        // sector type can be passed to random function to generate room templates
-        // parse room template array and spawn the mfs
+        let pos = Vec2::new(
+            sector_x as f32 * 16. - w as f32 * 16. / 2.,
+            sector_y as f32 * 16. - h as f32 * 16. / 2.,
+        );
+        tile_spawn_evw.send(TileSpawnEvent { pos });
+
+        player_spawn_evw.send(PlayerSpawnEvent {
+            pos: Vec2::splat(0.),
+        });
     }
 }
