@@ -32,7 +32,6 @@ fn propagate_sprite_flips(
             else {
                 continue;
             };
-
             if child_flippable.flip_x != parent_flippable.flip_x {
                 child_xform.translation.x *= -1.;
                 child_flippable.flip_x = parent_flippable.flip_x;

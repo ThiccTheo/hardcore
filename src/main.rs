@@ -1,24 +1,25 @@
 mod animation;
+mod tile;
 mod game_state;
-mod level;
 mod mouse_position;
 mod physics;
 mod player;
 mod sprite_flip;
-mod tile;
+mod level;
 
 use {
     animation::AnimationPlugin,
     bevy::prelude::*,
+    bevy_ecs_tilemap::TilemapPlugin,
     bevy_rapier2d::prelude::*,
+    tile::TilePlugin,
     game_state::GameState,
     leafwing_input_manager::prelude::*,
-    level::LevelPlugin,
     mouse_position::MousePositionPlugin,
     physics::PhysicsPlugin,
     player::{PlayerAction, PlayerPlugin},
     sprite_flip::SpriteFlipPlugin,
-    tile::TilePlugin,
+    level::LevelPlugin,
 };
 
 fn main() {
@@ -27,8 +28,9 @@ fn main() {
         .add_plugins((
             DefaultPlugins.set(ImagePlugin::default_nearest()),
             RapierPhysicsPlugin::<NoUserData>::default(),
-            RapierDebugRenderPlugin::default(),
+            // RapierDebugRenderPlugin::default(),
             InputManagerPlugin::<PlayerAction>::default(),
+            TilemapPlugin,
             MousePositionPlugin,
             SpriteFlipPlugin,
             AnimationPlugin,
