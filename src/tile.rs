@@ -56,7 +56,7 @@ fn on_tile_spawn(
     let (tilemap_id, mut tile_storage, tilemap_xform) = tilemap_qry.single_mut();
 
     for &TileSpawnEvent { pos, tex_idx } in tile_spawn_evr.read() {
-        let tile_pos = TilePos::new(pos.x as u32, pos.y as u32);
+        let tile_pos = TilePos::new(pos.x as u32, LEVEL_SIZE.y as u32 - (pos.y as u32) - 1); // bevy_ecs_tilemap is first quadrant unflipped
         let tile_id = cmds
             .spawn((TileBundle {
                 position: tile_pos,

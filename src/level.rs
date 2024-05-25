@@ -5,9 +5,10 @@ use {
     rand::Rng,
 };
 
-pub const LEVEL_SIZE: Vec2 = Vec2::splat(32.);
+pub const LEVEL_SIZE: Vec2 = Vec2::splat(64.);
 const SECTOR_ROWS: usize = 4;
 const SECTOR_COLS: usize = 4;
+const SECTOR_SIZE: Vec2 = Vec2::new(LEVEL_SIZE.x / SECTOR_COLS as f32, LEVEL_SIZE.y / SECTOR_ROWS as f32);
 
 pub struct LevelPlugin;
 
@@ -22,14 +23,14 @@ impl Plugin for LevelPlugin {
     }
 }
 
-type LevelLayout = [[[[u8; LEVEL_SIZE.x as usize / SECTOR_COLS];
-    LEVEL_SIZE.y as usize / SECTOR_ROWS]; SECTOR_COLS]; SECTOR_ROWS];
+type LevelLayout = [[[[u8; SECTOR_SIZE.x as usize];
+    SECTOR_SIZE.y as usize]; SECTOR_COLS]; SECTOR_ROWS];
 
-type SectorLayout = Vec<Vec<SectorType>>;
+type SectorLayout = [[SectorType; SECTOR_COLS]; SECTOR_ROWS];
 
 bitflags! {
     #[rustfmt::skip]
-    #[derive(Clone, Debug, PartialEq, Eq)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub struct SectorType: u8 {
         const ENTRANCE   = 0b00100000;
         const EXIT       = 0b00010000;
@@ -42,23 +43,23 @@ bitflags! {
 }
 
 fn generate_sector_layout() -> SectorLayout {
-    let mut level_layout = vec![vec![SectorType::CLOSED; SECTOR_COLS]; SECTOR_ROWS];
+    let mut sector_layout = [[SectorType::CLOSED; SECTOR_COLS]; SECTOR_ROWS];
 
-    let entrance_sector = rand::thread_rng().gen_range(0..SECTOR_COLS);
-    level_layout[0][entrance_sector] |= SectorType::ENTRANCE;
+    let entrance_pos = rand::thread_rng().gen_range(0..SECTOR_COLS);
+    sector_layout[0][entrance_pos] |= SectorType::ENTRANCE;
 
-    let exit_sector = rand::thread_rng().gen_range(0..SECTOR_COLS);
-    level_layout[SECTOR_ROWS - 1][exit_sector] |= SectorType::EXIT;
+    let exit_pos = rand::thread_rng().gen_range(0..SECTOR_COLS);
+    sector_layout[SECTOR_ROWS - 1][exit_pos] |= SectorType::EXIT;
 
     let mut down_sectors = vec![0; SECTOR_ROWS];
     let mut up_sectors = vec![0; SECTOR_ROWS];
 
     for y in 0..(SECTOR_ROWS - 1) {
         down_sectors[y] = rand::thread_rng().gen_range(0..SECTOR_COLS);
-        level_layout[y][down_sectors[y]] |= SectorType::OPEN_DOWN;
+        sector_layout[y][down_sectors[y]] |= SectorType::OPEN_DOWN;
 
         up_sectors[y + 1] = down_sectors[y];
-        level_layout[y + 1][up_sectors[y + 1]] |= SectorType::OPEN_UP;
+        sector_layout[y + 1][up_sectors[y + 1]] |= SectorType::OPEN_UP;
     }
 
     let make_inclusive_range = |a: usize, b: usize| {
@@ -73,24 +74,24 @@ fn generate_sector_layout() -> SectorLayout {
 
     for y in 0..SECTOR_ROWS {
         let connected_sectors = if y == 0 {
-            make_inclusive_range(entrance_sector, down_sectors[y])
+            make_inclusive_range(entrance_pos, down_sectors[y])
         } else if (1..SECTOR_ROWS - 1).contains(&y) {
             make_inclusive_range(up_sectors[y], down_sectors[y])
         } else {
-            make_inclusive_range(exit_sector, up_sectors[y])
+            make_inclusive_range(exit_pos, up_sectors[y])
         };
         let Some(connected_sectors) = connected_sectors else {
             continue;
         };
 
-        level_layout[y][*connected_sectors.start()] |= SectorType::OPEN_RIGHT;
-        level_layout[y][*connected_sectors.end()] |= SectorType::OPEN_LEFT;
+        sector_layout[y][*connected_sectors.start()] |= SectorType::OPEN_RIGHT;
+        sector_layout[y][*connected_sectors.end()] |= SectorType::OPEN_LEFT;
 
         for x in *connected_sectors.start() + 1..*connected_sectors.end() {
-            level_layout[y][x] |= SectorType::OPEN_LEFT | SectorType::OPEN_RIGHT;
+            sector_layout[y][x] |= SectorType::OPEN_LEFT | SectorType::OPEN_RIGHT;
         }
     }
-    level_layout
+    sector_layout
 }
 
 pub fn generate_level_layout(In(sector_layout): In<SectorLayout>) -> LevelLayout {
@@ -98,40 +99,39 @@ pub fn generate_level_layout(In(sector_layout): In<SectorLayout>) -> LevelLayout
 
     for y in 0..SECTOR_ROWS {
         for x in 0..SECTOR_COLS {
-            let sector = &sector_layout[y][x];
-            let mut contents = [
-                [1, 1, 1, 1, 1, 1, 1, 1],
-                [1, 0, 0, 0, 0, 0, 0, 1],
-                [1, 0, 0, 0, 0, 0, 0, 1],
-                [1, 0, 0, 0, 0, 0, 0, 1],
-                [1, 0, 0, 0, 0, 0, 0, 1],
-                [1, 0, 0, 0, 0, 0, 0, 1],
-                [1, 0, 0, 0, 0, 0, 0, 1],
-                [1, 1, 1, 1, 1, 1, 1, 1],
+            let sector_type = &sector_layout[y][x];
+            let mut sector_contents = [
+                [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]; SECTOR_SIZE.y as usize
             ];
-            if sector.intersects(SectorType::OPEN_UP) {
-                contents[0] = [1, 0, 0, 0, 0, 0, 0, 1];
+            sector_contents[0] = [1; SECTOR_SIZE.x as usize];
+            sector_contents[SECTOR_SIZE.y as usize - 1] = [1; SECTOR_SIZE.x as usize];
+
+            if sector_type.intersects(SectorType::OPEN_UP) {
+                sector_contents[0] = [0; SECTOR_SIZE.x as usize];
+                sector_contents[0][0] = 1;
+                sector_contents[0][SECTOR_SIZE.x as usize - 1] = 1;
             }
-            if sector.intersects(SectorType::OPEN_DOWN) {
-                contents[contents.len() - 1] = [1, 0, 0, 0, 0, 0, 0, 1];
+            if sector_type.intersects(SectorType::OPEN_DOWN) {
+                sector_contents[SECTOR_SIZE.y as usize - 1] = [0; SECTOR_SIZE.x as usize];
+                sector_contents[SECTOR_SIZE.y as usize - 1][0] = 1;
+                sector_contents[SECTOR_SIZE.y as usize - 1][SECTOR_SIZE.x as usize - 1] = 1;
             }
-            if sector.intersects(SectorType::OPEN_LEFT) {
-                for i in 1..SECTOR_ROWS - 1 {
-                    contents[i][0] = 0;
+            if sector_type.intersects(SectorType::OPEN_LEFT) {
+                for i in 1..SECTOR_SIZE.y as usize - 1 {
+                    sector_contents[i][0] = 0;
                 }
             }
-            if sector.intersects(SectorType::OPEN_RIGHT) {
-                for i in 1..SECTOR_ROWS - 1 {
-                    contents[i][contents.len() - 1] = 0;
+            if sector_type.intersects(SectorType::OPEN_RIGHT) {
+                for i in 1..SECTOR_SIZE.y as usize - 1 {
+                    sector_contents[i][SECTOR_SIZE.x as usize - 1] = 0;
                 }
             }
-            // something is wrong here
-            if sector.intersects(SectorType::ENTRANCE) {
-                contents[contents.len() - 2][3] = 2;
-            } else if sector.intersects(SectorType::EXIT) {
-                contents[contents.len() - 2][3] = 3;
+            if sector_type.intersects(SectorType::ENTRANCE) {
+                sector_contents[SECTOR_SIZE.y as usize - 2][SECTOR_SIZE.x as usize / 2] = 2;
+            } else if sector_type.intersects(SectorType::EXIT) {
+                sector_contents[SECTOR_SIZE.y as usize - 2][SECTOR_SIZE.x as usize / 2] = 3;
             }
-            level_layout[y][x] = contents;
+            level_layout[y][x] = sector_contents;
         }
     }
     level_layout
@@ -143,8 +143,8 @@ fn signal_entity_spawns(
 ) {
     for r in 0..SECTOR_ROWS {
         for c in 0..SECTOR_COLS {
-            for y in 0..LEVEL_SIZE.y as usize / SECTOR_ROWS {
-                for x in 0..LEVEL_SIZE.x as usize / SECTOR_COLS {
+            for y in 0..SECTOR_SIZE.y as usize {
+                for x in 0..SECTOR_SIZE.x as usize {
                     if level_layout[r][c][y][x] != 0 {
                         tile_spawn_evw.send(TileSpawnEvent {
                             pos: Vec2::new(
@@ -153,8 +153,8 @@ fn signal_entity_spawns(
                             ),
                             tex_idx: match level_layout[r][c][y][x] {
                                 1 => 0,
-                                2 => 2,
-                                3 => 1,
+                                2 => 1,
+                                3 => 2,
                                 _ => 0,
                             },
                         });
@@ -164,3 +164,4 @@ fn signal_entity_spawns(
         }
     }
 }
+
