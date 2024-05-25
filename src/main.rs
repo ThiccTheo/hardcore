@@ -1,25 +1,25 @@
 mod animation;
-mod tile;
 mod game_state;
+mod level;
 mod mouse_position;
 mod physics;
 mod player;
 mod sprite_flip;
-mod level;
+mod tile;
 
 use {
     animation::AnimationPlugin,
     bevy::prelude::*,
     bevy_ecs_tilemap::TilemapPlugin,
     bevy_rapier2d::prelude::*,
-    tile::TilePlugin,
     game_state::GameState,
     leafwing_input_manager::prelude::*,
+    level::LevelPlugin,
     mouse_position::MousePositionPlugin,
     physics::PhysicsPlugin,
     player::{PlayerAction, PlayerPlugin},
     sprite_flip::SpriteFlipPlugin,
-    level::LevelPlugin,
+    tile::TilePlugin,
 };
 
 fn main() {

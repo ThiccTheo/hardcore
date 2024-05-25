@@ -1,9 +1,4 @@
-use {
-    super::game_state::GameState,
-    bevy::prelude::*,
-    bitflags::bitflags,
-    rand::Rng,
-};
+use {super::{game_state::GameState, tile::TileSpawnEvent}, bevy::prelude::*, bitflags::bitflags, rand::Rng};
 
 pub const LEVEL_SIZE: Vec2 = Vec2::splat(64.);
 
@@ -11,22 +6,23 @@ pub struct LevelPlugin;
 
 impl Plugin for LevelPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(LevelLayout::new()).
-        add_systems(
+        app.add_systems(
             OnEnter(GameState::Playing),
-            generate_level_layout.pipe(convert_sectors_to_level),
+            generate_sector_layout.pipe(generate_level_layout).pipe(signal_entity_spawns),
         );
     }
 }
 
-#[derive(Resource, Deref, DerefMut)]
+#[derive(Deref, DerefMut)]
 struct LevelLayout(Vec<Vec<u8>>);
 
 impl LevelLayout {
     fn new() -> Self {
-        Self(vec![vec![0; 64]; 64])
+        Self(vec![vec![0; LEVEL_SIZE.x as usize]; LEVEL_SIZE.y as usize])
     }
 }
+
+type SectorLayout = Vec<Vec<SectorType>>;
 
 bitflags! {
     #[rustfmt::skip]
@@ -42,9 +38,7 @@ bitflags! {
     }
 }
 
-type SectorLayout = Vec<Vec<SectorType>>;
-
-fn generate_level_layout() -> SectorLayout {
+fn generate_sector_layout() -> SectorLayout {
     let rows = 4;
     let cols = 4;
     let mut level_layout = vec![vec![SectorType::CLOSED; cols]; rows];
@@ -98,19 +92,27 @@ fn generate_level_layout() -> SectorLayout {
     level_layout
 }
 
-pub fn convert_sectors_to_level(
+pub fn generate_level_layout(
     In(sector_layout): In<SectorLayout>,
-    mut level_layout: ResMut<LevelLayout>,
-) {
-    for (sector_x, sector_y, sector_type) in sector_layout.iter().enumerate().flat_map(|(sector_y, sectors)| {
-        sectors.iter()
+) -> LevelLayout {
+    for (sector_x, sector_y, sector_type) in
+        sector_layout
+            .iter()
             .enumerate()
-            .map(move |(sector_x, sector_type)| (sector_x, sector_y, sector_type))
-    }) {
-
-    }
+            .flat_map(|(sector_y, sectors)| {
+                sectors
+                    .iter()
+                    .enumerate()
+                    .map(move |(sector_x, sector_type)| (sector_x, sector_y, sector_type))
+            })
+    {}
+    LevelLayout::new()
 }
 
-fn spawn_entities() {
-    
+fn signal_entity_spawns(In(level_layout): In<LevelLayout>, mut tile_spawn_evw: EventWriter<TileSpawnEvent>) {
+    for y in 0..LEVEL_SIZE.y as usize {
+        for x in 0..LEVEL_SIZE.x as usize {
+            tile_spawn_evw.send(TileSpawnEvent { pos: Vec2::new(x as f32, y as f32) });
+        }
+    }
 }

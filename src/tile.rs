@@ -1,74 +1,45 @@
 use {
-    super::game_state::GameState,
+    super::{game_state::GameState, level::LEVEL_SIZE},
     bevy::prelude::*,
     bevy_ecs_tilemap::prelude::*,
     bevy_rapier2d::prelude::*,
 };
 
 const TILE_Z: f32 = 2.;
+const TILE_SIZE: Vec2 = Vec2::splat(16.);
 
 pub struct TilePlugin;
 
 impl Plugin for TilePlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(
-            OnEnter(GameState::Playing),
-            (spawn_tilemap, add_colliders_to_blocks).chain(),
-        );
+        app.add_event::<TileSpawnEvent>()
+            .add_systems(OnEnter(GameState::Playing), spawn_tilemap)
+            .add_systems(Update, on_tile_spawn.run_if(in_state(GameState::Playing)));
     }
 }
 
-#[derive(Component)]
-struct Tile;
+#[derive(Event)]
+pub struct TileSpawnEvent {
+    pub pos: Vec2,
+}
 
 fn spawn_tilemap(mut cmds: Commands, asset_server: Res<AssetServer>) {
-    let tilemap_id = cmds.spawn_empty().id();
-    let mut tile_storage = TileStorage::empty(TilemapSize {
-        x: WORLD_SIZE.x as u32,
-        y: WORLD_SIZE.y as u32,
-    });
-
-    for y in 0..WORLD_SIZE.y as u32 {
-        for x in 0..WORLD_SIZE.x as u32 {
-            let perlin_val = perlin_map.get_value(x as usize, y as usize);
-            if perlin_val > 0.007 || y > 100 {
-                continue;
-            };
-
-            let block_pos = TilePos { x, y };
-            let block_id = cmds
-                .spawn((
-                    Block,
-                    TileBundle {
-                        texture_index: TileTextureIndex(if y == 100 { 0 } else if y < 50 { 2 } else { 1 }),
-                        position: block_pos,
-                        tilemap_id: TilemapId(blockmap_id),
-                        ..default()
-                    },
-                ))
-                .id();
-
-            block_storage.set(&block_pos, block_id);
-        }
-    }
-
-    let block_size = TilemapTileSize::new(16., 16.);
-    cmds.entity(blockmap_id).insert(TilemapBundle {
-        grid_size: block_size.into(),
+    cmds.spawn(TilemapBundle {
+        grid_size: TILE_SIZE.into(),
         map_type: TilemapType::Square,
         size: TilemapSize {
-            x: WORLD_SIZE.x as u32,
-            y: WORLD_SIZE.y as u32,
+            x: LEVEL_SIZE.x as u32,
+            y: LEVEL_SIZE.y as u32,
         },
-        storage: block_storage,
+        storage: TileStorage::empty(TilemapSize {
+            x: LEVEL_SIZE.x as u32,
+            y: LEVEL_SIZE.y as u32,
+        }),
         texture: TilemapTexture::Single(asset_server.load("tile.png")),
-        tile_size: block_size,
+        tile_size: TILE_SIZE.into(),
         transform: get_tilemap_center_transform(
-            &TilemapSize {
-                x: WORLD_SIZE.x as u32,
-                y: WORLD_SIZE.y as u32,
-            },
-            &block_size.into(),
+            &TilemapSize::new(LEVEL_SIZE.x as u32, LEVEL_SIZE.y as u32),
+            &TILE_SIZE.into(),
             &TilemapType::Square,
             1.,
         ),
@@ -76,23 +47,28 @@ fn spawn_tilemap(mut cmds: Commands, asset_server: Res<AssetServer>) {
     });
 }
 
-fn add_colliders_to_blocks(
+fn on_tile_spawn(
+    mut tile_spawn_evr: EventReader<TileSpawnEvent>,
     mut cmds: Commands,
-    block_tilemap_qry: Query<(&TileStorage, &Transform), With<BlockTilemap>>,
-    block_pos_qry: Query<&TilePos, (With<Block>, Without<Collider>)>,
+    mut tilemap_qry: Query<(Entity, &mut TileStorage, &Transform)>,
 ) {
-    let (block_storage, &block_tilemap_xform) = block_tilemap_qry.single();
+    let (tilemap_id, mut tile_storage, tilemap_xform) = tilemap_qry.single_mut();
 
-    for &tile_id in block_storage.iter().flatten() {
-        let Ok(tile_pos) = block_pos_qry.get(tile_id) else {
-            continue;
-        };
-        let Vec2 { x, y } =
-            tile_pos.center_in_world(&Vec2::splat(16.).into(), &TilemapType::Square);
+    for &TileSpawnEvent { pos } in tile_spawn_evr.read() {
+        let tile_pos = TilePos::new(pos.x as u32, pos.y as u32);
+        let tile_id = cmds
+            .spawn((TileBundle {
+                position: tile_pos,
+                tilemap_id: TilemapId(tilemap_id),
+                ..default()
+            },))
+            .id();
+        tile_storage.set(&tile_pos, tile_id);
 
+        let Vec2 { x, y } = tile_pos.center_in_world(&TILE_SIZE.into(), &TilemapType::Square);
         cmds.entity(tile_id).insert((
-            TransformBundle::from_transform(block_tilemap_xform * Transform::from_xyz(x, y, BLOCK_Z)),
-            Collider::cuboid(8., 8.),
+            TransformBundle::from_transform(*tilemap_xform * Transform::from_xyz(x, y, TILE_Z)),
+            Collider::cuboid(TILE_SIZE.x / 2., TILE_SIZE.y / 2.),
         ));
     }
 }

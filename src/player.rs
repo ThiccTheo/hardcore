@@ -75,8 +75,14 @@ fn spawn_player(
                 (PlayerAction::ZoomIn, KeyCode::NumpadAdd),
                 (PlayerAction::ZoomOut, KeyCode::NumpadSubtract),
             ])
-            .insert_multiple([(PlayerAction::Attack, MouseButton::Left), (PlayerAction::Interact, MouseButton::Right)])
-            .insert_multiple([(PlayerAction::HotbarPrevious, MouseWheelDirection::Up), (PlayerAction::HotbarNext, MouseWheelDirection::Down)])
+            .insert_multiple([
+                (PlayerAction::Attack, MouseButton::Left),
+                (PlayerAction::Interact, MouseButton::Right),
+            ])
+            .insert_multiple([
+                (PlayerAction::HotbarPrevious, MouseWheelDirection::Up),
+                (PlayerAction::HotbarNext, MouseWheelDirection::Down),
+            ])
             .clone(),
             ..default()
         },
