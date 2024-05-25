@@ -21,6 +21,7 @@ impl Plugin for TilePlugin {
 #[derive(Event)]
 pub struct TileSpawnEvent {
     pub pos: Vec2,
+    pub tex_idx: usize,
 }
 
 fn spawn_tilemap(mut cmds: Commands, asset_server: Res<AssetServer>) {
@@ -35,7 +36,7 @@ fn spawn_tilemap(mut cmds: Commands, asset_server: Res<AssetServer>) {
             x: LEVEL_SIZE.x as u32,
             y: LEVEL_SIZE.y as u32,
         }),
-        texture: TilemapTexture::Single(asset_server.load("tile.png")),
+        texture: TilemapTexture::Single(asset_server.load("images/tile.png")),
         tile_size: TILE_SIZE.into(),
         transform: get_tilemap_center_transform(
             &TilemapSize::new(LEVEL_SIZE.x as u32, LEVEL_SIZE.y as u32),
@@ -54,12 +55,13 @@ fn on_tile_spawn(
 ) {
     let (tilemap_id, mut tile_storage, tilemap_xform) = tilemap_qry.single_mut();
 
-    for &TileSpawnEvent { pos } in tile_spawn_evr.read() {
+    for &TileSpawnEvent { pos, tex_idx } in tile_spawn_evr.read() {
         let tile_pos = TilePos::new(pos.x as u32, pos.y as u32);
         let tile_id = cmds
             .spawn((TileBundle {
                 position: tile_pos,
                 tilemap_id: TilemapId(tilemap_id),
+                texture_index: TileTextureIndex(tex_idx as u32),
                 ..default()
             },))
             .id();

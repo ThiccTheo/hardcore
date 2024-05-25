@@ -1,6 +1,13 @@
-use {super::{game_state::GameState, tile::TileSpawnEvent}, bevy::prelude::*, bitflags::bitflags, rand::Rng};
+use {
+    super::{game_state::GameState, tile::TileSpawnEvent},
+    bevy::prelude::*,
+    bitflags::bitflags,
+    rand::Rng,
+};
 
-pub const LEVEL_SIZE: Vec2 = Vec2::splat(64.);
+pub const LEVEL_SIZE: Vec2 = Vec2::splat(32.);
+const SECTOR_ROWS: usize = 4;
+const SECTOR_COLS: usize = 4;
 
 pub struct LevelPlugin;
 
@@ -8,19 +15,15 @@ impl Plugin for LevelPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             OnEnter(GameState::Playing),
-            generate_sector_layout.pipe(generate_level_layout).pipe(signal_entity_spawns),
+            generate_sector_layout
+                .pipe(generate_level_layout)
+                .pipe(signal_entity_spawns),
         );
     }
 }
 
-#[derive(Deref, DerefMut)]
-struct LevelLayout(Vec<Vec<u8>>);
-
-impl LevelLayout {
-    fn new() -> Self {
-        Self(vec![vec![0; LEVEL_SIZE.x as usize]; LEVEL_SIZE.y as usize])
-    }
-}
+type LevelLayout = [[[[u8; LEVEL_SIZE.x as usize / SECTOR_COLS];
+    LEVEL_SIZE.y as usize / SECTOR_ROWS]; SECTOR_COLS]; SECTOR_ROWS];
 
 type SectorLayout = Vec<Vec<SectorType>>;
 
@@ -39,21 +42,19 @@ bitflags! {
 }
 
 fn generate_sector_layout() -> SectorLayout {
-    let rows = 4;
-    let cols = 4;
-    let mut level_layout = vec![vec![SectorType::CLOSED; cols]; rows];
+    let mut level_layout = vec![vec![SectorType::CLOSED; SECTOR_COLS]; SECTOR_ROWS];
 
-    let entrance_sector = rand::thread_rng().gen_range(0..cols);
+    let entrance_sector = rand::thread_rng().gen_range(0..SECTOR_COLS);
     level_layout[0][entrance_sector] |= SectorType::ENTRANCE;
 
-    let exit_sector = rand::thread_rng().gen_range(0..cols);
-    level_layout[rows - 1][exit_sector] |= SectorType::EXIT;
+    let exit_sector = rand::thread_rng().gen_range(0..SECTOR_COLS);
+    level_layout[SECTOR_ROWS - 1][exit_sector] |= SectorType::EXIT;
 
-    let mut down_sectors = vec![0; rows];
-    let mut up_sectors = vec![0; rows];
+    let mut down_sectors = vec![0; SECTOR_ROWS];
+    let mut up_sectors = vec![0; SECTOR_ROWS];
 
-    for y in 0..(rows - 1) {
-        down_sectors[y] = rand::thread_rng().gen_range(0..cols);
+    for y in 0..(SECTOR_ROWS - 1) {
+        down_sectors[y] = rand::thread_rng().gen_range(0..SECTOR_COLS);
         level_layout[y][down_sectors[y]] |= SectorType::OPEN_DOWN;
 
         up_sectors[y + 1] = down_sectors[y];
@@ -70,10 +71,10 @@ fn generate_sector_layout() -> SectorLayout {
         }
     };
 
-    for y in 0..rows {
+    for y in 0..SECTOR_ROWS {
         let connected_sectors = if y == 0 {
             make_inclusive_range(entrance_sector, down_sectors[y])
-        } else if (1..rows - 1).contains(&y) {
+        } else if (1..SECTOR_ROWS - 1).contains(&y) {
             make_inclusive_range(up_sectors[y], down_sectors[y])
         } else {
             make_inclusive_range(exit_sector, up_sectors[y])
@@ -92,27 +93,74 @@ fn generate_sector_layout() -> SectorLayout {
     level_layout
 }
 
-pub fn generate_level_layout(
-    In(sector_layout): In<SectorLayout>,
-) -> LevelLayout {
-    for (sector_x, sector_y, sector_type) in
-        sector_layout
-            .iter()
-            .enumerate()
-            .flat_map(|(sector_y, sectors)| {
-                sectors
-                    .iter()
-                    .enumerate()
-                    .map(move |(sector_x, sector_type)| (sector_x, sector_y, sector_type))
-            })
-    {}
-    LevelLayout::new()
+pub fn generate_level_layout(In(sector_layout): In<SectorLayout>) -> LevelLayout {
+    let mut level_layout = LevelLayout::default();
+
+    for y in 0..SECTOR_ROWS {
+        for x in 0..SECTOR_COLS {
+            let sector = &sector_layout[y][x];
+            let mut contents = [
+                [1, 1, 1, 1, 1, 1, 1, 1],
+                [1, 0, 0, 0, 0, 0, 0, 1],
+                [1, 0, 0, 0, 0, 0, 0, 1],
+                [1, 0, 0, 0, 0, 0, 0, 1],
+                [1, 0, 0, 0, 0, 0, 0, 1],
+                [1, 0, 0, 0, 0, 0, 0, 1],
+                [1, 0, 0, 0, 0, 0, 0, 1],
+                [1, 1, 1, 1, 1, 1, 1, 1],
+            ];
+            if sector.intersects(SectorType::OPEN_UP) {
+                contents[0] = [1, 0, 0, 0, 0, 0, 0, 1];
+            }
+            if sector.intersects(SectorType::OPEN_DOWN) {
+                contents[contents.len() - 1] = [1, 0, 0, 0, 0, 0, 0, 1];
+            }
+            if sector.intersects(SectorType::OPEN_LEFT) {
+                for i in 1..SECTOR_ROWS - 1 {
+                    contents[i][0] = 0;
+                }
+            }
+            if sector.intersects(SectorType::OPEN_RIGHT) {
+                for i in 1..SECTOR_ROWS - 1 {
+                    contents[i][contents.len() - 1] = 0;
+                }
+            }
+            // something is wrong here
+            if sector.intersects(SectorType::ENTRANCE) {
+                contents[contents.len() - 2][3] = 2;
+            } else if sector.intersects(SectorType::EXIT) {
+                contents[contents.len() - 2][3] = 3;
+            }
+            level_layout[y][x] = contents;
+        }
+    }
+    level_layout
 }
 
-fn signal_entity_spawns(In(level_layout): In<LevelLayout>, mut tile_spawn_evw: EventWriter<TileSpawnEvent>) {
-    for y in 0..LEVEL_SIZE.y as usize {
-        for x in 0..LEVEL_SIZE.x as usize {
-            tile_spawn_evw.send(TileSpawnEvent { pos: Vec2::new(x as f32, y as f32) });
+fn signal_entity_spawns(
+    In(level_layout): In<LevelLayout>,
+    mut tile_spawn_evw: EventWriter<TileSpawnEvent>,
+) {
+    for r in 0..SECTOR_ROWS {
+        for c in 0..SECTOR_COLS {
+            for y in 0..LEVEL_SIZE.y as usize / SECTOR_ROWS {
+                for x in 0..LEVEL_SIZE.x as usize / SECTOR_COLS {
+                    if level_layout[r][c][y][x] != 0 {
+                        tile_spawn_evw.send(TileSpawnEvent {
+                            pos: Vec2::new(
+                                (x + (c * LEVEL_SIZE.x as usize / SECTOR_COLS)) as f32,
+                                (y + (r * LEVEL_SIZE.y as usize / SECTOR_ROWS)) as f32,
+                            ),
+                            tex_idx: match level_layout[r][c][y][x] {
+                                1 => 0,
+                                2 => 2,
+                                3 => 1,
+                                _ => 0,
+                            },
+                        });
+                    }
+                }
+            }
         }
     }
 }

@@ -87,7 +87,7 @@ fn spawn_player(
             ..default()
         },
         SpriteSheetBundle {
-            texture: asset_server.load("player.png"),
+            texture: asset_server.load("images/player.png"),
             atlas: TextureAtlas {
                 layout: tex_atlas_layouts.add(TextureAtlasLayout::from_grid(
                     Vec2::splat(16.),
