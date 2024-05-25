@@ -6,8 +6,8 @@ use {
 };
 
 pub const LEVEL_SIZE: Vec2 = Vec2::splat(64.);
-const SECTOR_ROWS: usize = 4;
-const SECTOR_COLS: usize = 4;
+const SECTOR_ROWS: usize = 8;
+const SECTOR_COLS: usize = 8;
 const SECTOR_SIZE: Vec2 = Vec2::new(LEVEL_SIZE.x / SECTOR_COLS as f32, LEVEL_SIZE.y / SECTOR_ROWS as f32);
 
 pub struct LevelPlugin;
@@ -101,10 +101,14 @@ pub fn generate_level_layout(In(sector_layout): In<SectorLayout>) -> LevelLayout
         for x in 0..SECTOR_COLS {
             let sector_type = &sector_layout[y][x];
             let mut sector_contents = [
-                [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]; SECTOR_SIZE.y as usize
+                [0; SECTOR_SIZE.x as usize]; SECTOR_SIZE.y as usize
             ];
             sector_contents[0] = [1; SECTOR_SIZE.x as usize];
             sector_contents[SECTOR_SIZE.y as usize - 1] = [1; SECTOR_SIZE.x as usize];
+            for i in 1..SECTOR_SIZE.y as usize - 1 {
+                sector_contents[i][0] = 1;
+                sector_contents[i][SECTOR_SIZE.x as usize - 1] = 1;
+            }
 
             if sector_type.intersects(SectorType::OPEN_UP) {
                 sector_contents[0] = [0; SECTOR_SIZE.x as usize];
