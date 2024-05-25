@@ -5,10 +5,13 @@ use {
     rand::Rng,
 };
 
-pub const LEVEL_SIZE: Vec2 = Vec2::splat(64.);
-const SECTOR_ROWS: usize = 8;
-const SECTOR_COLS: usize = 8;
-const SECTOR_SIZE: Vec2 = Vec2::new(LEVEL_SIZE.x / SECTOR_COLS as f32, LEVEL_SIZE.y / SECTOR_ROWS as f32);
+pub const LEVEL_SIZE: Vec2 = Vec2::splat(32.);
+const SECTOR_ROWS: usize = 4;
+const SECTOR_COLS: usize = 4;
+const SECTOR_SIZE: Vec2 = Vec2::new(
+    LEVEL_SIZE.x / SECTOR_COLS as f32,
+    LEVEL_SIZE.y / SECTOR_ROWS as f32,
+);
 
 pub struct LevelPlugin;
 
@@ -23,8 +26,8 @@ impl Plugin for LevelPlugin {
     }
 }
 
-type LevelLayout = [[[[u8; SECTOR_SIZE.x as usize];
-    SECTOR_SIZE.y as usize]; SECTOR_COLS]; SECTOR_ROWS];
+type LevelLayout =
+    [[[[u8; SECTOR_SIZE.x as usize]; SECTOR_SIZE.y as usize]; SECTOR_COLS]; SECTOR_ROWS];
 
 type SectorLayout = [[SectorType; SECTOR_COLS]; SECTOR_ROWS];
 
@@ -100,9 +103,7 @@ pub fn generate_level_layout(In(sector_layout): In<SectorLayout>) -> LevelLayout
     for y in 0..SECTOR_ROWS {
         for x in 0..SECTOR_COLS {
             let sector_type = &sector_layout[y][x];
-            let mut sector_contents = [
-                [0; SECTOR_SIZE.x as usize]; SECTOR_SIZE.y as usize
-            ];
+            let mut sector_contents = [[0; SECTOR_SIZE.x as usize]; SECTOR_SIZE.y as usize];
             sector_contents[0] = [1; SECTOR_SIZE.x as usize];
             sector_contents[SECTOR_SIZE.y as usize - 1] = [1; SECTOR_SIZE.x as usize];
             for i in 1..SECTOR_SIZE.y as usize - 1 {
@@ -168,4 +169,3 @@ fn signal_entity_spawns(
         }
     }
 }
-

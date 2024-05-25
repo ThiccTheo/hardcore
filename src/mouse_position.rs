@@ -1,4 +1,7 @@
-use bevy::{prelude::*, window::PrimaryWindow};
+use {
+    super::main_camera::MainCamera,
+    bevy::{prelude::*, window::PrimaryWindow},
+};
 
 pub struct MousePositionPlugin;
 
@@ -14,13 +17,13 @@ pub struct MousePosition(pub Vec2);
 
 fn update_mouse_position(
     mut old_mouse_pos: ResMut<MousePosition>,
-    primary_win_qry: Query<&Window, With<PrimaryWindow>>,
-    cam_qry: Query<(&Camera, &GlobalTransform)>,
+    win_qry: Query<&Window, With<PrimaryWindow>>,
+    cam_qry: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
 ) {
-    let primary_win = primary_win_qry.single();
+    let win = win_qry.single();
     let (cam, cam_glob_xform) = cam_qry.single();
 
-    let Some(new_mouse_pos) = primary_win
+    let Some(new_mouse_pos) = win
         .cursor_position()
         .and_then(|mouse_pos| cam.viewport_to_world_2d(cam_glob_xform, mouse_pos))
     else {

@@ -6,7 +6,7 @@ use {
 };
 
 const TILE_Z: f32 = 2.;
-const TILE_SIZE: Vec2 = Vec2::splat(16.);
+pub const TILE_SIZE: Vec2 = Vec2::splat(16.);
 
 pub struct TilePlugin;
 

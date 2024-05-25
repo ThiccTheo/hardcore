@@ -2,6 +2,7 @@ use {
     super::{
         animation::{self, AnimationIndices, AnimationTimer},
         game_state::GameState,
+        main_camera::MainCamera,
         mouse_position::MousePosition,
         physics::{self, Acceleration, Grounded, NetDirection, TerminalVelocity},
         sprite_flip::Flippable,
@@ -57,9 +58,6 @@ pub enum PlayerAction {
     HotbarNext,
 }
 
-#[derive(Component)]
-pub struct MainCamera;
-
 fn spawn_player(
     mut cmds: Commands,
     asset_server: Res<AssetServer>,
@@ -112,12 +110,7 @@ fn spawn_player(
         Acceleration(Vec2::new(300., 500.)),
         NetDirection { x: 0, y: -1 },
         Grounded::default(),
-    ))
-    .with_children(|parent| {
-        let mut cam = Camera2dBundle::default();
-        cam.projection.scale /= 4.;
-        parent.spawn((MainCamera, cam));
-    });
+    ));
 }
 
 fn discrete_player_input(
@@ -128,7 +121,7 @@ fn discrete_player_input(
         &Grounded,
         &mut Flippable,
     )>,
-    mut cam_qry: Query<&mut OrthographicProjection, With<Camera>>,
+    mut cam_qry: Query<&mut OrthographicProjection, With<MainCamera>>,
     mouse_pos: Res<MousePosition>,
     time: Res<Time>,
 ) {

@@ -1,6 +1,7 @@
 mod animation;
 mod game_state;
 mod level;
+mod main_camera;
 mod mouse_position;
 mod physics;
 mod player;
@@ -15,6 +16,7 @@ use {
     game_state::GameState,
     leafwing_input_manager::prelude::*,
     level::LevelPlugin,
+    main_camera::MainCameraPlugin,
     mouse_position::MousePositionPlugin,
     physics::PhysicsPlugin,
     player::{PlayerAction, PlayerPlugin},
@@ -28,13 +30,14 @@ fn main() {
         .add_plugins((
             DefaultPlugins.set(ImagePlugin::default_nearest()),
             RapierPhysicsPlugin::<NoUserData>::default(),
-            // RapierDebugRenderPlugin::default(),
+            //RapierDebugRenderPlugin::default(),
             InputManagerPlugin::<PlayerAction>::default(),
             TilemapPlugin,
             MousePositionPlugin,
             SpriteFlipPlugin,
             AnimationPlugin,
             PhysicsPlugin,
+            MainCameraPlugin,
             LevelPlugin,
             PlayerPlugin,
             TilePlugin,
