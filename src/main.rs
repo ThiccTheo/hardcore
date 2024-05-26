@@ -10,7 +10,10 @@ mod tile;
 
 use {
     animation::AnimationPlugin,
-    bevy::{prelude::*, window::{PresentMode, WindowMode, WindowResolution}},
+    bevy::{
+        prelude::*,
+        window::{PresentMode, WindowMode, WindowResolution},
+    },
     bevy_ecs_tilemap::TilemapPlugin,
     bevy_rapier2d::prelude::*,
     game_state::GameState,
@@ -28,9 +31,10 @@ fn main() {
     App::new()
         .init_state::<GameState>()
         .add_plugins((
-            DefaultPlugins.set(ImagePlugin::default_nearest()).set(WindowPlugin {
-                primary_window: Some(
-                    Window {
+            DefaultPlugins
+                .set(ImagePlugin::default_nearest())
+                .set(WindowPlugin {
+                    primary_window: Some(Window {
                         present_mode: PresentMode::AutoVsync,
                         mode: WindowMode::Windowed,
                         position: WindowPosition::Centered(MonitorSelection::Primary),
@@ -39,8 +43,8 @@ fn main() {
                         resizable: false,
                         ..default()
                     }),
-                ..default()
-            }),
+                    ..default()
+                }),
             RapierPhysicsPlugin::<NoUserData>::default(),
             //RapierDebugRenderPlugin::default(),
             InputManagerPlugin::<PlayerAction>::default(),

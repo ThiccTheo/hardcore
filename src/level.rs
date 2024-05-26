@@ -8,6 +8,7 @@ use {
     bevy_ecs_tilemap::prelude::*,
     bitflags::bitflags,
     rand::Rng,
+    std::cmp::Ordering,
 };
 
 const SECTOR_COLS: usize = 4;
@@ -59,8 +60,8 @@ fn generate_sector_layout() -> SectorLayout {
     let exit_pos = rand::thread_rng().gen_range(0..SECTOR_COLS);
     sector_layout[SECTOR_ROWS - 1][exit_pos] |= SectorType::EXIT;
 
-    let mut down_sectors = vec![0; SECTOR_ROWS];
-    let mut up_sectors = vec![0; SECTOR_ROWS];
+    let mut down_sectors = [0; SECTOR_ROWS];
+    let mut up_sectors = [0; SECTOR_ROWS];
 
     for y in 0..(SECTOR_ROWS - 1) {
         down_sectors[y] = rand::thread_rng().gen_range(0..SECTOR_COLS);
@@ -70,14 +71,10 @@ fn generate_sector_layout() -> SectorLayout {
         sector_layout[y + 1][up_sectors[y + 1]] |= SectorType::OPEN_UP;
     }
 
-    let make_inclusive_range = |a: usize, b: usize| {
-        if a < b {
-            Some(a..=b)
-        } else if b < a {
-            Some(b..=a)
-        } else {
-            None
-        }
+    let make_inclusive_range = |a: usize, b: usize| match a.cmp(&b) {
+        Ordering::Less => Some(a..=b),
+        Ordering::Greater => Some(b..=a),
+        Ordering::Equal => None,
     };
 
     for y in 0..SECTOR_ROWS {
