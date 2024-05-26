@@ -63,7 +63,6 @@ fn clamp_camera_to_tilemap(
             TILE_SIZE.y / 2.
         },
     );
-
     let (tilemap_left_px, tilemap_right_px, tilemap_top_px, tilemap_bottom_px) = (
         -tilemap_size_px.x / 2. - clamp_correction.x,
         tilemap_size_px.x / 2. + clamp_correction.x,

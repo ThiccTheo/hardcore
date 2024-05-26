@@ -1,6 +1,11 @@
 use {
-    super::{game_state::GameState, tile::TileSpawnEvent},
+    super::{
+        game_state::GameState,
+        player::PlayerSpawnEvent,
+        tile::{TileSpawnEvent, TILE_SIZE},
+    },
     bevy::prelude::*,
+    bevy_ecs_tilemap::prelude::*,
     bitflags::bitflags,
     rand::Rng,
 };
@@ -97,7 +102,7 @@ fn generate_sector_layout() -> SectorLayout {
     sector_layout
 }
 
-pub fn generate_level_layout(In(sector_layout): In<SectorLayout>) -> LevelLayout {
+fn generate_level_layout(In(sector_layout): In<SectorLayout>) -> LevelLayout {
     let mut level_layout = LevelLayout::default();
 
     for y in 0..SECTOR_ROWS {
@@ -142,27 +147,41 @@ pub fn generate_level_layout(In(sector_layout): In<SectorLayout>) -> LevelLayout
     level_layout
 }
 
-fn signal_entity_spawns(
+pub fn signal_entity_spawns(
     In(level_layout): In<LevelLayout>,
+    tilemap_qry: Query<&Transform, With<TileStorage>>,
     mut tile_spawn_evw: EventWriter<TileSpawnEvent>,
+    mut player_spawn_evw: EventWriter<PlayerSpawnEvent>,
 ) {
+    let tilemap_xform = tilemap_qry.single();
+
     for r in 0..SECTOR_ROWS {
         for c in 0..SECTOR_COLS {
             for y in 0..SECTOR_SIZE.y as usize {
                 for x in 0..SECTOR_SIZE.x as usize {
-                    if level_layout[r][c][y][x] != 0 {
+                    let entity_type = level_layout[r][c][y][x];
+                    let tile_pos = TilePos::new(
+                        (x + c * SECTOR_SIZE.x as usize) as u32,
+                        LEVEL_SIZE.y as u32 - (y + r * SECTOR_SIZE.y as usize) as u32 - 1,
+                    );
+                    let world_pos = (*tilemap_xform
+                        * Transform::from_translation(
+                            tile_pos
+                                .center_in_world(&TILE_SIZE.into(), &TilemapType::Square)
+                                .extend(default()),
+                        ))
+                    .translation
+                    .truncate();
+
+                    if matches!(entity_type, 1..=3) {
                         tile_spawn_evw.send(TileSpawnEvent {
-                            pos: Vec2::new(
-                                (x + (c * LEVEL_SIZE.x as usize / SECTOR_COLS)) as f32,
-                                (y + (r * LEVEL_SIZE.y as usize / SECTOR_ROWS)) as f32,
-                            ),
-                            tex_idx: match level_layout[r][c][y][x] {
-                                1 => 0,
-                                2 => 1,
-                                3 => 2,
-                                _ => 0,
-                            },
+                            tile_pos,
+                            world_pos,
+                            tex_idx: entity_type as usize - 1,
                         });
+                    }
+                    if entity_type == 2 {
+                        player_spawn_evw.send(PlayerSpawnEvent { pos: world_pos });
                     }
                 }
             }

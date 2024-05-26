@@ -2,6 +2,7 @@ use {
     super::{
         animation::{self, AnimationIndices, AnimationTimer},
         game_state::GameState,
+        level,
         main_camera::MainCamera,
         mouse_position::MousePosition,
         physics::{self, Acceleration, Grounded, NetDirection, TerminalVelocity},
@@ -18,7 +19,11 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(GameState::Playing), spawn_player)
+        app.add_event::<PlayerSpawnEvent>()
+            .add_systems(
+                OnEnter(GameState::Playing),
+                on_player_spawn.after(level::signal_entity_spawns),
+            )
             .add_systems(
                 Update,
                 (
@@ -58,7 +63,13 @@ pub enum PlayerAction {
     HotbarNext,
 }
 
-fn spawn_player(
+#[derive(Event)]
+pub struct PlayerSpawnEvent {
+    pub pos: Vec2,
+}
+
+fn on_player_spawn(
+    mut player_spawn_evr: EventReader<PlayerSpawnEvent>,
     mut cmds: Commands,
     asset_server: Res<AssetServer>,
     mut tex_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
@@ -96,7 +107,9 @@ fn spawn_player(
                 )),
                 index: 0,
             },
-            transform: Transform::from_xyz(0., 0., PLAYER_Z),
+            transform: Transform::from_translation(
+                player_spawn_evr.read().next().unwrap().pos.extend(PLAYER_Z),
+            ),
             ..default()
         },
         Flippable::default(),
@@ -195,12 +208,23 @@ fn continuous_player_input(
 
 fn update_player_animation(
     mut player_qry: Query<
-        (&mut Player, &TextureAtlas, &mut AnimationIndices, &Grounded, &NetDirection),
+        (
+            &mut Player,
+            &TextureAtlas,
+            &mut AnimationIndices,
+            &Grounded,
+            &NetDirection,
+        ),
         With<Player>,
     >,
 ) {
-    let (mut player, player_tex_atlas, mut player_animation_indices, player_grounded, player_net_dir) =
-        player_qry.single_mut();
+    let (
+        mut player,
+        player_tex_atlas,
+        mut player_animation_indices,
+        player_grounded,
+        player_net_dir,
+    ) = player_qry.single_mut();
 
     let attacking = AnimationIndices { first: 4, last: 7 };
     let jumping = AnimationIndices { first: 3, last: 3 };
