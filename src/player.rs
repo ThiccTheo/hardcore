@@ -3,7 +3,6 @@ use {
         animation::{self, AnimationIndices, AnimationTimer},
         game_state::GameState,
         level,
-        main_camera::MainCamera,
         mouse_position::MousePosition,
         physics::{self, Acceleration, Grounded, NetDirection, TerminalVelocity},
         sprite_flip::Flippable,
@@ -26,15 +25,12 @@ impl Plugin for PlayerPlugin {
             )
             .add_systems(
                 Update,
-                (
-                    discrete_player_input,
-                    update_player_animation.before(animation::adjust_sprite_indices),
-                )
+                (update_player_animation.before(animation::adjust_sprite_indices),)
                     .run_if(in_state(GameState::Playing)),
             )
             .add_systems(
                 FixedUpdate,
-                continuous_player_input
+                player_input
                     .after(physics::process_collisions)
                     .before(physics::apply_forces)
                     .run_if(in_state(GameState::Playing)),
@@ -56,11 +52,6 @@ pub enum PlayerAction {
     MoveRight,
     Jump,
     Attack,
-    Interact,
-    ZoomIn,
-    ZoomOut,
-    HotbarPrevious,
-    HotbarNext,
 }
 
 #[derive(Event)]
@@ -81,17 +72,8 @@ fn on_player_spawn(
                 (PlayerAction::MoveLeft, KeyCode::KeyA),
                 (PlayerAction::MoveRight, KeyCode::KeyD),
                 (PlayerAction::Jump, KeyCode::Space),
-                (PlayerAction::ZoomIn, KeyCode::NumpadAdd),
-                (PlayerAction::ZoomOut, KeyCode::NumpadSubtract),
             ])
-            .insert_multiple([
-                (PlayerAction::Attack, MouseButton::Left),
-                (PlayerAction::Interact, MouseButton::Right),
-            ])
-            .insert_multiple([
-                (PlayerAction::HotbarPrevious, MouseWheelDirection::Up),
-                (PlayerAction::HotbarNext, MouseWheelDirection::Down),
-            ])
+            .insert(PlayerAction::Attack, MouseButton::Left)
             .clone(),
             ..default()
         },
@@ -126,58 +108,22 @@ fn on_player_spawn(
     ));
 }
 
-fn discrete_player_input(
-    mut player_qry: Query<(
-        &mut Player,
-        &mut Transform,
-        &ActionState<PlayerAction>,
-        &Grounded,
-        &mut Flippable,
-    )>,
-    mut cam_qry: Query<&mut OrthographicProjection, With<MainCamera>>,
-    mouse_pos: Res<MousePosition>,
-    time: Res<Time>,
-) {
-    let dt = time.delta_seconds();
-    let (mut player, mut player_xform, player_actions, player_grounded, mut player_flippable) =
-        player_qry.single_mut();
-    let mut cam_proj = cam_qry.single_mut();
-
-    if player_grounded.0 {
-        player.is_jumping = false;
-        if player_actions.just_pressed(&PlayerAction::Jump) {
-            player.can_jump = true;
-        }
-    }
-    if player.can_attack && player_actions.just_pressed(&PlayerAction::Attack) {
-        player_flippable.flip_x = player_xform.translation.x > mouse_pos.x;
-        player.is_attacking = true;
-        player.can_attack = false;
-    }
-    if player_actions.pressed(&PlayerAction::Interact) {
-        player_xform.translation = mouse_pos.extend(PLAYER_Z);
-    }
-    if player_actions.pressed(&PlayerAction::ZoomIn) {
-        cam_proj.scale -= dt;
-    }
-    if player_actions.pressed(&PlayerAction::ZoomOut) {
-        cam_proj.scale += dt;
-    }
-}
-
-fn continuous_player_input(
+fn player_input(
     mut player_qry: Query<(
         &mut Player,
         &ActionState<PlayerAction>,
+        &Transform,
         &mut Velocity,
         &mut NetDirection,
         &mut Grounded,
         &mut Flippable,
     )>,
+    mouse_pos: Res<MousePosition>,
 ) {
     let (
         mut player,
         player_actions,
+        player_xform,
         mut player_vel,
         mut player_net_dir,
         mut player_grounded,
@@ -197,7 +143,17 @@ fn continuous_player_input(
         player_net_dir.x = 1;
         player_flippable.flip_x = false;
     }
-
+    if player.can_attack && player_actions.just_pressed(&PlayerAction::Attack) {
+        player_flippable.flip_x = player_xform.translation.x > mouse_pos.x;
+        player.is_attacking = true;
+        player.can_attack = false;
+    }
+    if player_grounded.0 {
+        player.is_jumping = false;
+        if player_actions.just_pressed(&PlayerAction::Jump) {
+            player.can_jump = true;
+        }
+    }
     if player.can_jump {
         player.can_jump = false;
         player.is_jumping = true;
@@ -212,6 +168,7 @@ fn update_player_animation(
             &mut Player,
             &TextureAtlas,
             &mut AnimationIndices,
+            &mut AnimationTimer,
             &Grounded,
             &NetDirection,
         ),
@@ -221,36 +178,54 @@ fn update_player_animation(
     let (
         mut player,
         player_tex_atlas,
-        mut player_animation_indices,
+        mut player_animation_idxs,
+        mut player_animation_timer,
         player_grounded,
         player_net_dir,
     ) = player_qry.single_mut();
 
-    let attacking = AnimationIndices { first: 4, last: 7 };
-    let jumping = AnimationIndices { first: 3, last: 3 };
-    let walking = AnimationIndices { first: 1, last: 2 };
-    let idling = AnimationIndices { first: 0, last: 0 };
+    let (attack_idxs, attack_timer) = (
+        AnimationIndices { first: 4, last: 6 },
+        AnimationTimer(Timer::from_seconds(0.5, TimerMode::Repeating)),
+    );
+    let (jump_idxs, jump_timer) = (
+        AnimationIndices { first: 3, last: 3 },
+        AnimationTimer(Timer::from_seconds(0., TimerMode::Repeating)),
+    );
+    let (walk_idxs, walk_timer) = (
+        AnimationIndices { first: 1, last: 2 },
+        AnimationTimer(Timer::from_seconds(0.3, TimerMode::Repeating)),
+    );
+    let (idle_idxs, idle_timer) = (
+        AnimationIndices { first: 0, last: 0 },
+        AnimationTimer(Timer::from_seconds(0.3, TimerMode::Repeating)),
+    );
 
     if player.is_attacking {
-        if *player_animation_indices != attacking {
-            *player_animation_indices = attacking;
-        } else if player_tex_atlas.index == attacking.last {
-            *player_animation_indices = idling.clone();
+        if *player_animation_idxs != attack_idxs {
+            *player_animation_idxs = attack_idxs;
+            *player_animation_timer = attack_timer;
+        } else if player_tex_atlas.index == attack_idxs.last {
+            *player_animation_idxs = idle_idxs.clone();
+            *player_animation_timer = idle_timer;
             player.is_attacking = false;
         }
     } else if player.is_jumping && !player_grounded.0 {
-        if *player_animation_indices != jumping {
-            *player_animation_indices = jumping;
+        if *player_animation_idxs != jump_idxs {
+            *player_animation_idxs = jump_idxs;
+            *player_animation_timer = jump_timer;
         }
     } else if player_net_dir.x != 0 && player_grounded.0 {
-        if *player_animation_indices != walking {
-            *player_animation_indices = walking;
+        if *player_animation_idxs != walk_idxs {
+            *player_animation_idxs = walk_idxs;
+            *player_animation_timer = walk_timer;
         }
-    } else if *player_animation_indices != idling {
-        *player_animation_indices = idling.clone();
+    } else if *player_animation_idxs != idle_idxs {
+        *player_animation_idxs = idle_idxs.clone();
+        *player_animation_timer = idle_timer;
     }
 
-    if *player_animation_indices == idling {
+    if *player_animation_idxs == idle_idxs {
         player.can_attack = true;
     }
 }

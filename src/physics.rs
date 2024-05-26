@@ -28,11 +28,6 @@ pub struct NetDirection {
 #[derive(Component, Default, Deref, DerefMut)]
 pub struct Grounded(pub bool);
 
-fn is_colliding(normal: Vec2, threshold: f32, axis: Vec2) -> bool {
-    let dot_prod = normal.normalize().dot(axis);
-    dot_prod > threshold || dot_prod < -threshold
-}
-
 pub fn apply_forces(
     mut physics_qry: Query<(
         &mut KinematicCharacterController,
@@ -63,6 +58,11 @@ pub fn apply_forces(
         pos += vel.linvel * dt;
         kcc.translation = Some(pos);
     }
+}
+
+fn is_colliding(normal: Vec2, threshold: f32, axis: Vec2) -> bool {
+    let dot_prod = normal.normalize().dot(axis);
+    dot_prod > threshold || dot_prod < -threshold
 }
 
 pub fn process_collisions(
