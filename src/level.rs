@@ -5,12 +5,12 @@ use {
     rand::Rng,
 };
 
-pub const LEVEL_SIZE: Vec2 = Vec2::splat(32.);
-const SECTOR_ROWS: usize = 4;
 const SECTOR_COLS: usize = 4;
-const SECTOR_SIZE: Vec2 = Vec2::new(
-    LEVEL_SIZE.x / SECTOR_COLS as f32,
-    LEVEL_SIZE.y / SECTOR_ROWS as f32,
+const SECTOR_ROWS: usize = 4;
+const SECTOR_SIZE: Vec2 = Vec2::new(16., 8.);
+pub const LEVEL_SIZE: Vec2 = Vec2::new(
+    SECTOR_SIZE.x * SECTOR_COLS as f32,
+    SECTOR_SIZE.y * SECTOR_ROWS as f32,
 );
 
 pub struct LevelPlugin;
