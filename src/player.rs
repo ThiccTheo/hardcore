@@ -195,14 +195,14 @@ fn continuous_player_input(
 
 fn update_player_animation(
     mut player_qry: Query<
-        (&mut Player, &mut AnimationIndices, &Grounded, &NetDirection),
+        (&mut Player, &TextureAtlas, &mut AnimationIndices, &Grounded, &NetDirection),
         With<Player>,
     >,
 ) {
-    let (mut player, mut player_animation_indices, player_grounded, player_net_dir) =
+    let (mut player, player_tex_atlas, mut player_animation_indices, player_grounded, player_net_dir) =
         player_qry.single_mut();
 
-    let attacking = AnimationIndices { first: 4, last: 5 };
+    let attacking = AnimationIndices { first: 4, last: 7 };
     let jumping = AnimationIndices { first: 3, last: 3 };
     let walking = AnimationIndices { first: 1, last: 2 };
     let idling = AnimationIndices { first: 0, last: 0 };
@@ -210,7 +210,7 @@ fn update_player_animation(
     if player.is_attacking {
         if *player_animation_indices != attacking {
             *player_animation_indices = attacking;
-        } else if player_animation_indices.last == attacking.last {
+        } else if player_tex_atlas.index == attacking.last {
             *player_animation_indices = idling.clone();
             player.is_attacking = false;
         }
