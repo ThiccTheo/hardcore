@@ -7,7 +7,7 @@ pub struct MainCameraPlugin;
 
 impl Plugin for MainCameraPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(ClearColor(Color::ANTIQUE_WHITE))
+        app.insert_resource(ClearColor(Color::rgb_u8(208, 187, 148)))
             .add_systems(Startup, spawn_main_camera)
             .add_systems(
                 Update,

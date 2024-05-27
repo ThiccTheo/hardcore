@@ -8,7 +8,7 @@ use {
     bevy_rapier2d::prelude::*,
 };
 
-const TILE_Z: f32 = 2.;
+pub const TILE_Z: f32 = 1.;
 pub const TILE_SIZE: Vec2 = Vec2::splat(16.);
 
 pub struct TilePlugin;
@@ -30,7 +30,7 @@ impl Plugin for TilePlugin {
 pub struct TileSpawnEvent {
     pub tile_pos: TilePos,
     pub world_pos: Vec2,
-    pub tex_idx: usize,
+    pub tex_idx: TileTextureIndex,
 }
 
 fn spawn_tilemap(mut cmds: Commands, asset_server: Res<AssetServer>) {
@@ -75,7 +75,7 @@ fn on_tile_spawn(
                 TileBundle {
                     position: tile_pos,
                     tilemap_id: TilemapId(tilemap_id),
-                    texture_index: TileTextureIndex(tex_idx as u32),
+                    texture_index: tex_idx,
                     ..default()
                 },
                 TransformBundle::from_transform(Transform::from_translation(
@@ -85,7 +85,7 @@ fn on_tile_spawn(
             .id();
         tile_storage.set(&tile_pos, tile_id);
 
-        if tex_idx == 0 {
+        if tex_idx.0 == 0 {
             cmds.entity(tile_id)
                 .insert(Collider::cuboid(TILE_SIZE.x / 2., TILE_SIZE.y / 2.));
         }

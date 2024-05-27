@@ -5,6 +5,7 @@ mod main_camera;
 mod mouse_position;
 mod physics;
 mod player;
+mod skeleton;
 mod sprite_flip;
 mod tile;
 
@@ -23,6 +24,7 @@ use {
     mouse_position::MousePositionPlugin,
     physics::PhysicsPlugin,
     player::{PlayerAction, PlayerPlugin},
+    skeleton::SkeletonPlugin,
     sprite_flip::SpriteFlipPlugin,
     tile::TilePlugin,
 };
@@ -55,8 +57,9 @@ fn main() {
             PhysicsPlugin,
             MainCameraPlugin,
             LevelPlugin,
-            PlayerPlugin,
             TilePlugin,
+            PlayerPlugin,
+            SkeletonPlugin,
         ))
         .run();
 }

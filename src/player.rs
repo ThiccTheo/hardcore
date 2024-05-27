@@ -12,7 +12,7 @@ use {
     leafwing_input_manager::prelude::*,
 };
 
-const PLAYER_Z: f32 = 3.;
+pub const PLAYER_Z: f32 = 3.;
 
 pub struct PlayerPlugin;
 
@@ -25,7 +25,8 @@ impl Plugin for PlayerPlugin {
             )
             .add_systems(
                 Update,
-                (update_player_animation.before(animation::adjust_sprite_indices),)
+                player_animation
+                    .before(animation::adjust_sprite_indices)
                     .run_if(in_state(GameState::Playing)),
             )
             .add_systems(
@@ -96,7 +97,7 @@ fn on_player_spawn(
         },
         Flippable::default(),
         AnimationIndices::default(),
-        AnimationTimer(Timer::from_seconds(0.3, TimerMode::Repeating)),
+        AnimationTimer(Timer::from_seconds(default(), TimerMode::Repeating)),
         KinematicCharacterController::default(),
         Collider::capsule_y(3.75, 4.),
         Friction::coefficient(3.),
@@ -162,18 +163,15 @@ fn player_input(
     }
 }
 
-fn update_player_animation(
-    mut player_qry: Query<
-        (
-            &mut Player,
-            &TextureAtlas,
-            &mut AnimationIndices,
-            &mut AnimationTimer,
-            &Grounded,
-            &NetDirection,
-        ),
-        With<Player>,
-    >,
+fn player_animation(
+    mut player_qry: Query<(
+        &mut Player,
+        &TextureAtlas,
+        &mut AnimationIndices,
+        &mut AnimationTimer,
+        &Grounded,
+        &NetDirection,
+    )>,
 ) {
     let (
         mut player,
@@ -198,7 +196,7 @@ fn update_player_animation(
     );
     let (idle_idxs, idle_timer) = (
         AnimationIndices { first: 0, last: 0 },
-        AnimationTimer(Timer::from_seconds(0.3, TimerMode::Repeating)),
+        AnimationTimer(Timer::from_seconds(0., TimerMode::Repeating)),
     );
 
     if player.is_attacking {
