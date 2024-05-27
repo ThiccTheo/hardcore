@@ -10,7 +10,8 @@ use {
     bevy_rapier2d::prelude::*,
 };
 
-pub const SKELETON_Z: f32 = 2.;
+const SKELETON_Z: f32 = 2.;
+pub const SKELETON_ID: u8 = SKELETON_Z as u8;
 
 pub struct SkeletonPlugin;
 

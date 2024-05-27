@@ -12,7 +12,8 @@ use {
     leafwing_input_manager::prelude::*,
 };
 
-pub const PLAYER_Z: f32 = 3.;
+const PLAYER_Z: f32 = 3.;
+pub const PLAYER_ID: u8 = PLAYER_Z as u8;
 
 pub struct PlayerPlugin;
 

@@ -8,7 +8,8 @@ use {
     bevy_rapier2d::prelude::*,
 };
 
-pub const TILE_Z: f32 = 1.;
+const TILE_Z: f32 = 1.;
+pub const TILE_ID: u8 = TILE_Z as u8;
 pub const TILE_SIZE: Vec2 = Vec2::splat(16.);
 
 pub struct TilePlugin;

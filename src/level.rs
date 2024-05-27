@@ -1,9 +1,9 @@
 use {
     super::{
         game_state::GameState,
-        player::{PlayerSpawnEvent, PLAYER_Z},
-        skeleton::{SkeletonSpawnEvent, SKELETON_Z},
-        tile::{TileSpawnEvent, TILE_SIZE, TILE_Z},
+        player::{PlayerSpawnEvent, PLAYER_ID},
+        skeleton::{SkeletonSpawnEvent, SKELETON_ID},
+        tile::{TileSpawnEvent, TILE_ID, TILE_SIZE},
     },
     bevy::prelude::*,
     bevy_ecs_tilemap::prelude::*,
@@ -12,7 +12,7 @@ use {
     std::cmp::Ordering,
 };
 
-const EXIT_ID: u8 = 10;
+const EXIT_ID: u8 = u8::MAX;
 const SECTOR_COLS: usize = 4;
 const SECTOR_ROWS: usize = 4;
 const SECTOR_SIZE: Vec2 = Vec2::new(16., 8.);
@@ -65,7 +65,7 @@ fn generate_sector_layout() -> SectorLayout {
     let mut down_sectors = [0; SECTOR_ROWS];
     let mut up_sectors = [0; SECTOR_ROWS];
 
-    for y in 0..(SECTOR_ROWS - 1) {
+    for y in 0..SECTOR_ROWS - 1 {
         down_sectors[y] = rand::thread_rng().gen_range(0..SECTOR_COLS);
         sector_layout[y][down_sectors[y]] |= SectorType::OPEN_DOWN;
 
@@ -108,23 +108,22 @@ fn generate_level_layout(In(sector_layout): In<SectorLayout>) -> LevelLayout {
         for x in 0..SECTOR_COLS {
             let sector_type = &sector_layout[y][x];
             let mut sector_contents = [[0; SECTOR_SIZE.x as usize]; SECTOR_SIZE.y as usize];
-            sector_contents[0] = [TILE_Z as u8; SECTOR_SIZE.x as usize];
-            sector_contents[SECTOR_SIZE.y as usize - 1] = [TILE_Z as u8; SECTOR_SIZE.x as usize];
+            sector_contents[0] = [TILE_ID; SECTOR_SIZE.x as usize];
+            sector_contents[SECTOR_SIZE.y as usize - 1] = [TILE_ID; SECTOR_SIZE.x as usize];
             for i in 1..SECTOR_SIZE.y as usize - 1 {
-                sector_contents[i][0] = TILE_Z as u8;
-                sector_contents[i][SECTOR_SIZE.x as usize - 1] = TILE_Z as u8;
+                sector_contents[i][0] = TILE_ID;
+                sector_contents[i][SECTOR_SIZE.x as usize - 1] = TILE_ID;
             }
 
             if sector_type.intersects(SectorType::OPEN_UP) {
                 sector_contents[0] = [0; SECTOR_SIZE.x as usize];
-                sector_contents[0][0] = TILE_Z as u8;
-                sector_contents[0][SECTOR_SIZE.x as usize - 1] = TILE_Z as u8;
+                sector_contents[0][0] = TILE_ID;
+                sector_contents[0][SECTOR_SIZE.x as usize - 1] = TILE_ID;
             }
             if sector_type.intersects(SectorType::OPEN_DOWN) {
                 sector_contents[SECTOR_SIZE.y as usize - 1] = [0; SECTOR_SIZE.x as usize];
-                sector_contents[SECTOR_SIZE.y as usize - 1][0] = TILE_Z as u8;
-                sector_contents[SECTOR_SIZE.y as usize - 1][SECTOR_SIZE.x as usize - 1] =
-                    TILE_Z as u8;
+                sector_contents[SECTOR_SIZE.y as usize - 1][0] = TILE_ID;
+                sector_contents[SECTOR_SIZE.y as usize - 1][SECTOR_SIZE.x as usize - 1] = TILE_ID;
             }
             if sector_type.intersects(SectorType::OPEN_LEFT) {
                 for i in 1..SECTOR_SIZE.y as usize - 1 {
@@ -137,8 +136,7 @@ fn generate_level_layout(In(sector_layout): In<SectorLayout>) -> LevelLayout {
                 }
             }
             if sector_type.intersects(SectorType::ENTRANCE) {
-                sector_contents[SECTOR_SIZE.y as usize - 2][SECTOR_SIZE.x as usize / 2] =
-                    PLAYER_Z as u8;
+                sector_contents[SECTOR_SIZE.y as usize - 2][SECTOR_SIZE.x as usize / 2] = PLAYER_ID;
             } else if sector_type.intersects(SectorType::EXIT) {
                 sector_contents[SECTOR_SIZE.y as usize - 2][SECTOR_SIZE.x as usize / 2] = EXIT_ID;
             }
@@ -175,27 +173,33 @@ pub fn signal_entity_spawns(
                     .translation
                     .truncate();
 
-                    if entity_type == TILE_Z as u8 {
-                        tile_spawn_evw.send(TileSpawnEvent {
-                            tile_pos,
-                            world_pos,
-                            tex_idx: TileTextureIndex(0),
-                        });
-                    } else if entity_type == PLAYER_Z as u8 {
-                        player_spawn_evw.send(PlayerSpawnEvent { pos: world_pos });
-                        tile_spawn_evw.send(TileSpawnEvent {
-                            tile_pos,
-                            world_pos,
-                            tex_idx: TileTextureIndex(1),
-                        });
-                    } else if entity_type == EXIT_ID {
-                        tile_spawn_evw.send(TileSpawnEvent {
-                            tile_pos,
-                            world_pos,
-                            tex_idx: TileTextureIndex(2),
-                        });
-                    } else if entity_type == SKELETON_Z as u8 {
-                        skeleton_spawn_evw.send(SkeletonSpawnEvent { pos: world_pos });
+                    match entity_type {
+                        TILE_ID => {
+                            tile_spawn_evw.send(TileSpawnEvent {
+                                tile_pos,
+                                world_pos,
+                                tex_idx: TileTextureIndex(0),
+                            });
+                        }
+                        PLAYER_ID => {
+                            player_spawn_evw.send(PlayerSpawnEvent { pos: world_pos });
+                            tile_spawn_evw.send(TileSpawnEvent {
+                                tile_pos,
+                                world_pos,
+                                tex_idx: TileTextureIndex(1),
+                            });
+                        }
+                        EXIT_ID => {
+                            tile_spawn_evw.send(TileSpawnEvent {
+                                tile_pos,
+                                world_pos,
+                                tex_idx: TileTextureIndex(2),
+                            });
+                        }
+                        SKELETON_ID => {
+                            skeleton_spawn_evw.send(SkeletonSpawnEvent { pos: world_pos });
+                        }
+                        _ => (),
                     }
                 }
             }
