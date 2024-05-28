@@ -6,7 +6,6 @@ use {
         mouse_position::MousePosition,
         physics::{self, Acceleration, Grounded, NetDirection, TerminalVelocity},
         sprite_flip::Flippable,
-        invincibility_frames::InvincibilityFrames,
     },
     bevy::prelude::*,
     bevy_rapier2d::prelude::*,

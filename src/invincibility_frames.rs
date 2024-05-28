@@ -1,4 +1,8 @@
-use {super::game_state::GameState, bevy::prelude::*, std::{f32::consts::TAU, time::Duration}};
+use {
+    super::game_state::GameState,
+    bevy::prelude::*,
+    std::{f32::consts::TAU, time::Duration},
+};
 
 const FLICKER_FREQUENCY: f32 = 5.;
 
@@ -32,7 +36,9 @@ fn update_iframes(
 
     for (id, mut iframes, mut sprite) in iframes_qry.iter_mut() {
         iframes.timer.tick(dt);
-        sprite.color.set_a(f32::sin(iframes.timer.elapsed_secs() * FLICKER_FREQUENCY * TAU));
+        sprite.color.set_a(f32::sin(
+            iframes.timer.elapsed_secs() * FLICKER_FREQUENCY * TAU,
+        ));
 
         if iframes.timer.just_finished() {
             cmds.entity(id).remove::<InvincibilityFrames>();
