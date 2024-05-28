@@ -1,5 +1,6 @@
 mod animation;
 mod game_state;
+mod invincibility_frames;
 mod level;
 mod main_camera;
 mod mouse_position;
@@ -19,6 +20,7 @@ use {
     bevy_ecs_tilemap::TilemapPlugin,
     bevy_rapier2d::prelude::*,
     game_state::GameState,
+    invincibility_frames::InvincibilityFramesPlugin,
     leafwing_input_manager::prelude::*,
     level::LevelPlugin,
     main_camera::MainCameraPlugin,
@@ -58,6 +60,7 @@ fn main() {
             AnimationPlugin,
             PhysicsPlugin,
             MainCameraPlugin,
+            InvincibilityFramesPlugin,
             LevelPlugin,
             TilePlugin,
             PlayerPlugin,
