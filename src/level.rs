@@ -3,6 +3,7 @@ use {
         game_state::GameState,
         player::{PlayerSpawnEvent, PLAYER_ID},
         skeleton::{SkeletonSpawnEvent, SKELETON_ID},
+        slime::{SlimeSpawnEvent, SLIME_ID},
         tile::{TileSpawnEvent, TILE_ID, TILE_SIZE},
     },
     bevy::prelude::*,
@@ -12,6 +13,7 @@ use {
     std::cmp::Ordering,
 };
 
+const BG_ID: u8 = 0;
 const EXIT_ID: u8 = u8::MAX;
 const SECTOR_COLS: usize = 4;
 const SECTOR_ROWS: usize = 4;
@@ -107,7 +109,7 @@ fn generate_level_layout(In(sector_layout): In<SectorLayout>) -> LevelLayout {
     for y in 0..SECTOR_ROWS {
         for x in 0..SECTOR_COLS {
             let sector_type = &sector_layout[y][x];
-            let mut sector_contents = [[0; SECTOR_SIZE.x as usize]; SECTOR_SIZE.y as usize];
+            let mut sector_contents = [[BG_ID; SECTOR_SIZE.x as usize]; SECTOR_SIZE.y as usize];
             sector_contents[0] = [TILE_ID; SECTOR_SIZE.x as usize];
             sector_contents[SECTOR_SIZE.y as usize - 1] = [TILE_ID; SECTOR_SIZE.x as usize];
             for i in 1..SECTOR_SIZE.y as usize - 1 {
@@ -116,23 +118,23 @@ fn generate_level_layout(In(sector_layout): In<SectorLayout>) -> LevelLayout {
             }
 
             if sector_type.intersects(SectorType::OPEN_UP) {
-                sector_contents[0] = [0; SECTOR_SIZE.x as usize];
+                sector_contents[0] = [BG_ID; SECTOR_SIZE.x as usize];
                 sector_contents[0][0] = TILE_ID;
                 sector_contents[0][SECTOR_SIZE.x as usize - 1] = TILE_ID;
             }
             if sector_type.intersects(SectorType::OPEN_DOWN) {
-                sector_contents[SECTOR_SIZE.y as usize - 1] = [0; SECTOR_SIZE.x as usize];
+                sector_contents[SECTOR_SIZE.y as usize - 1] = [BG_ID; SECTOR_SIZE.x as usize];
                 sector_contents[SECTOR_SIZE.y as usize - 1][0] = TILE_ID;
                 sector_contents[SECTOR_SIZE.y as usize - 1][SECTOR_SIZE.x as usize - 1] = TILE_ID;
             }
             if sector_type.intersects(SectorType::OPEN_LEFT) {
                 for i in 1..SECTOR_SIZE.y as usize - 1 {
-                    sector_contents[i][0] = 0;
+                    sector_contents[i][0] = BG_ID;
                 }
             }
             if sector_type.intersects(SectorType::OPEN_RIGHT) {
                 for i in 1..SECTOR_SIZE.y as usize - 1 {
-                    sector_contents[i][SECTOR_SIZE.x as usize - 1] = 0;
+                    sector_contents[i][SECTOR_SIZE.x as usize - 1] = BG_ID;
                 }
             }
             if sector_type.intersects(SectorType::ENTRANCE) {
@@ -152,6 +154,7 @@ pub fn signal_entity_spawns(
     mut tile_spawn_evw: EventWriter<TileSpawnEvent>,
     mut player_spawn_evw: EventWriter<PlayerSpawnEvent>,
     mut skeleton_spawn_evw: EventWriter<SkeletonSpawnEvent>,
+    mut slime_spawn_evw: EventWriter<SlimeSpawnEvent>,
 ) {
     let tilemap_xform = tilemap_qry.single();
 
@@ -198,6 +201,9 @@ pub fn signal_entity_spawns(
                         }
                         SKELETON_ID => {
                             skeleton_spawn_evw.send(SkeletonSpawnEvent { pos: world_pos });
+                        }
+                        SLIME_ID => {
+                            slime_spawn_evw.send(SlimeSpawnEvent { pos: world_pos });
                         }
                         _ => (),
                     }

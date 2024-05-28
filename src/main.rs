@@ -6,6 +6,7 @@ mod mouse_position;
 mod physics;
 mod player;
 mod skeleton;
+mod slime;
 mod sprite_flip;
 mod tile;
 
@@ -25,6 +26,7 @@ use {
     physics::PhysicsPlugin,
     player::{PlayerAction, PlayerPlugin},
     skeleton::SkeletonPlugin,
+    slime::SlimePlugin,
     sprite_flip::SpriteFlipPlugin,
     tile::TilePlugin,
 };
@@ -60,6 +62,7 @@ fn main() {
             TilePlugin,
             PlayerPlugin,
             SkeletonPlugin,
+            SlimePlugin,
         ))
         .run();
 }

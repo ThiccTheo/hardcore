@@ -16,7 +16,7 @@ impl Plugin for PhysicsPlugin {
 #[derive(Component, Default, Deref, DerefMut)]
 pub struct TerminalVelocity(pub Vec2);
 
-#[derive(Component, Default, Deref, DerefMut)]
+#[derive(Component, Default, Deref, DerefMut, Clone, Copy)]
 pub struct Acceleration(pub Vec2);
 
 #[derive(Component, Default)]
