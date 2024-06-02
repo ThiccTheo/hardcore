@@ -6,20 +6,20 @@ use {
 
 const FLICKER_FREQUENCY: f32 = 5.;
 
-pub struct InvincibilityFramesPlugin;
+pub struct IFramesPlugin;
 
-impl Plugin for InvincibilityFramesPlugin {
+impl Plugin for IFramesPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Update, update_iframes.run_if(in_state(GameState::Playing)));
     }
 }
 
 #[derive(Component)]
-pub struct InvincibilityFrames {
+pub struct IFrames {
     timer: Timer,
 }
 
-impl InvincibilityFrames {
+impl IFrames {
     pub fn new(duration: Duration) -> Self {
         Self {
             timer: Timer::new(duration, TimerMode::Once),
@@ -29,7 +29,7 @@ impl InvincibilityFrames {
 
 fn update_iframes(
     time: Res<Time>,
-    mut iframes_qry: Query<(Entity, &mut InvincibilityFrames, &mut Sprite)>,
+    mut iframes_qry: Query<(Entity, &mut IFrames, &mut Sprite)>,
     mut cmds: Commands,
 ) {
     let dt = time.delta();
@@ -41,7 +41,7 @@ fn update_iframes(
         ));
 
         if iframes.timer.just_finished() {
-            cmds.entity(id).remove::<InvincibilityFrames>();
+            cmds.entity(id).remove::<IFrames>();
             sprite.color.set_a(1.);
         }
     }

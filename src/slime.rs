@@ -76,7 +76,7 @@ fn on_slime_spawn(
             AnimationIndices::default(),
             AnimationTimer(Timer::from_seconds(default(), TimerMode::Repeating)),
             KinematicCharacterController::default(),
-            Collider::capsule_y(3.75, 4.),
+            Collider::capsule_y(1.375, 4.),
             Friction::coefficient(3.),
             Velocity::zero(),
             TerminalVelocity(Vec2::new(50., 200.)),

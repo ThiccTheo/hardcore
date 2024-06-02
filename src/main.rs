@@ -1,6 +1,7 @@
 mod animation;
+mod combat;
 mod game_state;
-mod invincibility_frames;
+mod iframes;
 mod level;
 mod main_camera;
 mod mouse_position;
@@ -19,8 +20,9 @@ use {
     },
     bevy_ecs_tilemap::TilemapPlugin,
     bevy_rapier2d::prelude::*,
+    combat::CombatPlugin,
     game_state::GameState,
-    invincibility_frames::InvincibilityFramesPlugin,
+    iframes::IFramesPlugin,
     leafwing_input_manager::prelude::*,
     level::LevelPlugin,
     main_camera::MainCameraPlugin,
@@ -52,7 +54,7 @@ fn main() {
                     ..default()
                 }),
             RapierPhysicsPlugin::<NoUserData>::default(),
-            //RapierDebugRenderPlugin::default(),
+            RapierDebugRenderPlugin::default(),
             InputManagerPlugin::<PlayerAction>::default(),
             TilemapPlugin,
             MousePositionPlugin,
@@ -60,12 +62,12 @@ fn main() {
             AnimationPlugin,
             PhysicsPlugin,
             MainCameraPlugin,
-            InvincibilityFramesPlugin,
             LevelPlugin,
             TilePlugin,
             PlayerPlugin,
             SkeletonPlugin,
             SlimePlugin,
         ))
+        .add_plugins((CombatPlugin, IFramesPlugin))
         .run();
 }
