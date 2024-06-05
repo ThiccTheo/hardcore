@@ -11,6 +11,7 @@ mod skeleton;
 mod slime;
 mod sprite_flip;
 mod tile;
+mod ui;
 
 use {
     animation::AnimationPlugin,
@@ -22,7 +23,7 @@ use {
     bevy_rapier2d::prelude::*,
     combat::CombatPlugin,
     game_state::GameState,
-    iframes::IFramesPlugin,
+    iframes::IframesPlugin,
     leafwing_input_manager::prelude::*,
     level::LevelPlugin,
     main_camera::MainCameraPlugin,
@@ -33,6 +34,7 @@ use {
     slime::SlimePlugin,
     sprite_flip::SpriteFlipPlugin,
     tile::TilePlugin,
+    ui::UiPlugin,
 };
 
 fn main() {
@@ -68,6 +70,6 @@ fn main() {
             SkeletonPlugin,
             SlimePlugin,
         ))
-        .add_plugins((CombatPlugin, IFramesPlugin))
+        .add_plugins((CombatPlugin, IframesPlugin, UiPlugin))
         .run();
 }

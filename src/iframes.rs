@@ -6,20 +6,20 @@ use {
 
 const FLICKER_FREQUENCY: f32 = 5.;
 
-pub struct IFramesPlugin;
+pub struct IframesPlugin;
 
-impl Plugin for IFramesPlugin {
+impl Plugin for IframesPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Update, update_iframes.run_if(in_state(GameState::Playing)));
     }
 }
 
 #[derive(Component)]
-pub struct IFrames {
+pub struct Iframes {
     timer: Timer,
 }
 
-impl IFrames {
+impl Iframes {
     pub fn new(duration: Duration) -> Self {
         Self {
             timer: Timer::new(duration, TimerMode::Once),
@@ -29,7 +29,7 @@ impl IFrames {
 
 fn update_iframes(
     time: Res<Time>,
-    mut iframes_qry: Query<(Entity, &mut IFrames, &mut Sprite)>,
+    mut iframes_qry: Query<(Entity, &mut Iframes, &mut Sprite)>,
     mut cmds: Commands,
 ) {
     let dt = time.delta();
@@ -41,7 +41,7 @@ fn update_iframes(
         ));
 
         if iframes.timer.just_finished() {
-            cmds.entity(id).remove::<IFrames>();
+            cmds.entity(id).remove::<Iframes>();
             sprite.color.set_a(1.);
         }
     }
