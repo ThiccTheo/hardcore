@@ -1,11 +1,11 @@
-use {bevy::prelude::*, super::game_state::GameState};
+use {super::game_state::GameState, bevy::prelude::*};
 
 pub struct UiPlugin;
 
 impl Plugin for UiPlugin {
-	fn build(&self, app: &mut App) {
-		app.add_systems(OnEnter(GameState::Playing), spawn_hud);
-	}
+    fn build(&self, app: &mut App) {
+        //app.add_systems(OnEnter(GameState::Playing), spawn_hud);
+    }
 }
 
 // fn spawn_hud(mut cmds: Commands) {

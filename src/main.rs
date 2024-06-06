@@ -16,10 +16,12 @@ mod ui;
 use {
     animation::AnimationPlugin,
     bevy::{
+        diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
         prelude::*,
         window::{PresentMode, WindowMode, WindowResolution},
     },
     bevy_ecs_tilemap::TilemapPlugin,
+    bevy_framepace::{FramepacePlugin, FramepaceSettings, Limiter},
     bevy_rapier2d::prelude::*,
     combat::CombatPlugin,
     game_state::GameState,
@@ -41,35 +43,49 @@ fn main() {
     App::new()
         .init_state::<GameState>()
         .add_plugins((
-            DefaultPlugins
-                .set(ImagePlugin::default_nearest())
-                .set(WindowPlugin {
-                    primary_window: Some(Window {
-                        present_mode: PresentMode::AutoVsync,
-                        mode: WindowMode::Windowed,
-                        position: WindowPosition::Centered(MonitorSelection::Primary),
-                        resolution: WindowResolution::new(1280., 720.),
-                        title: String::from("Hardcore"),
-                        resizable: false,
+            (
+                DefaultPlugins
+                    .set(ImagePlugin::default_nearest())
+                    .set(WindowPlugin {
+                        primary_window: Some(Window {
+                            present_mode: PresentMode::AutoNoVsync,
+                            mode: WindowMode::Windowed,
+                            position: WindowPosition::Centered(MonitorSelection::Primary),
+                            resolution: WindowResolution::new(1280., 720.),
+                            title: String::from("Hardcore"),
+                            resizable: false,
+                            ..default()
+                        }),
                         ..default()
                     }),
-                    ..default()
-                }),
-            RapierPhysicsPlugin::<NoUserData>::default(),
-            RapierDebugRenderPlugin::default(),
-            InputManagerPlugin::<PlayerAction>::default(),
-            TilemapPlugin,
-            MousePositionPlugin,
-            SpriteFlipPlugin,
-            AnimationPlugin,
-            PhysicsPlugin,
-            MainCameraPlugin,
-            LevelPlugin,
-            TilePlugin,
-            PlayerPlugin,
-            SkeletonPlugin,
-            SlimePlugin,
+                FrameTimeDiagnosticsPlugin,
+                LogDiagnosticsPlugin::default(),
+                FramepacePlugin,
+                RapierPhysicsPlugin::<NoUserData>::default(),
+                RapierDebugRenderPlugin::default(),
+                InputManagerPlugin::<PlayerAction>::default(),
+                TilemapPlugin,
+            ),
+            (
+                MousePositionPlugin,
+                SpriteFlipPlugin,
+                AnimationPlugin,
+                PhysicsPlugin,
+                MainCameraPlugin,
+                LevelPlugin,
+                TilePlugin,
+                PlayerPlugin,
+                SkeletonPlugin,
+                SlimePlugin,
+                CombatPlugin,
+                IframesPlugin,
+                UiPlugin,
+            ),
         ))
-        .add_plugins((CombatPlugin, IframesPlugin, UiPlugin))
+        .add_systems(PostStartup, cap_fps)
         .run();
+}
+
+fn cap_fps(mut fps_settings: ResMut<FramepaceSettings>) {
+    fps_settings.limiter = Limiter::from_framerate(15.);
 }

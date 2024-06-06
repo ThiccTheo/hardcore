@@ -37,9 +37,9 @@ pub fn apply_forces(
         &Acceleration,
         &NetDirection,
     )>,
-    time: Res<Time<Fixed>>,
+    time: Res<Time>,
 ) {
-    let dt = time.timestep().as_secs_f32();
+    let dt = time.delta_seconds();
 
     for (mut kcc, mut vel, terminal_vel, friction, acc, net_dir) in physics_qry.iter_mut() {
         vel.linvel.x += acc.x * net_dir.x as f32 * dt;
