@@ -5,7 +5,6 @@ mod iframes;
 mod level;
 mod main_camera;
 mod mouse_position;
-mod physics;
 mod player;
 mod skeleton;
 mod slime;
@@ -30,10 +29,9 @@ use {
     level::LevelPlugin,
     main_camera::MainCameraPlugin,
     mouse_position::MousePositionPlugin,
-    physics::PhysicsPlugin,
     player::{PlayerAction, PlayerPlugin},
-    skeleton::SkeletonPlugin,
-    slime::SlimePlugin,
+    //skeleton::SkeletonPlugin,
+    //slime::SlimePlugin,
     sprite_flip::SpriteFlipPlugin,
     tile::TilePlugin,
     ui::UiPlugin,
@@ -42,6 +40,14 @@ use {
 fn main() {
     App::new()
         .init_state::<GameState>()
+        .insert_resource({
+            let mut rapier_config = RapierConfiguration::default();
+            rapier_config.timestep_mode = TimestepMode::Fixed {
+                dt: Time::<Fixed>::default().timestep().as_secs_f32(),
+                substeps: 1,
+            };
+            rapier_config
+        })
         .add_plugins((
             (
                 DefaultPlugins
@@ -61,7 +67,7 @@ fn main() {
                 FrameTimeDiagnosticsPlugin,
                 LogDiagnosticsPlugin::default(),
                 FramepacePlugin,
-                RapierPhysicsPlugin::<NoUserData>::default(),
+                RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(16.).in_fixed_schedule(),
                 RapierDebugRenderPlugin::default(),
                 InputManagerPlugin::<PlayerAction>::default(),
                 TilemapPlugin,
@@ -70,13 +76,12 @@ fn main() {
                 MousePositionPlugin,
                 SpriteFlipPlugin,
                 AnimationPlugin,
-                PhysicsPlugin,
                 MainCameraPlugin,
                 LevelPlugin,
                 TilePlugin,
                 PlayerPlugin,
-                SkeletonPlugin,
-                SlimePlugin,
+                //SkeletonPlugin,
+                //SlimePlugin,
                 CombatPlugin,
                 IframesPlugin,
                 UiPlugin,
@@ -87,5 +92,5 @@ fn main() {
 }
 
 fn cap_fps(mut fps_settings: ResMut<FramepaceSettings>) {
-    fps_settings.limiter = Limiter::from_framerate(15.);
+    fps_settings.limiter = Limiter::from_framerate(200.);
 }

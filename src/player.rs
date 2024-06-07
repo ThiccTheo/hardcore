@@ -4,7 +4,6 @@ use {
         game_state::GameState,
         level,
         mouse_position::MousePosition,
-        physics::{self, Acceleration, Grounded, NetDirection, TerminalVelocity},
         sprite_flip::Flippable,
     },
     bevy::prelude::*,
@@ -24,19 +23,15 @@ impl Plugin for PlayerPlugin {
                 OnEnter(GameState::Playing),
                 on_player_spawn.after(level::signal_entity_spawns),
             )
-            .add_systems(
-                Update,
-                player_animation
-                    .before(animation::adjust_sprite_indices)
-                    .run_if(in_state(GameState::Playing)),
-
-            )
+            // .add_systems(
+            //     Update,
+            //     player_animation
+            //         .before(animation::adjust_sprite_indices)
+            //         .run_if(in_state(GameState::Playing)),
+            // )
             .add_systems(
                 FixedUpdate,
-                player_input
-                    .after(physics::process_collisions)
-                    .before(physics::apply_forces)
-                    .run_if(in_state(GameState::Playing)),
+                player_movement.run_if(in_state(GameState::Playing)),
             );
     }
 }
@@ -100,50 +95,37 @@ fn on_player_spawn(
         Flippable::default(),
         AnimationIndices::default(),
         AnimationTimer(Timer::from_seconds(default(), TimerMode::Repeating)),
-        KinematicCharacterController::default(),
         Collider::capsule_y(3.75, 4.),
-        Friction::coefficient(3.),
-        Velocity::zero(),
-        TerminalVelocity(Vec2::new(50., 200.)),
-        Acceleration(Vec2::new(300., 500.)),
-        NetDirection { x: 0, y: -1 },
-        Grounded::default(),
+        ColliderMassProperties::Density(0.),
+        AdditionalMassProperties::MassProperties(MassProperties {
+            mass: 75.,
+            principal_inertia: 0.,
+            ..default()
+        }),
+        RigidBody::Dynamic,
+        ExternalImpulse::default(),
     ));
 }
 
-fn player_input(
+fn player_movement(
     mut player_qry: Query<(
         &mut Player,
         &ActionState<PlayerAction>,
         &Transform,
-        &mut Velocity,
-        &mut NetDirection,
-        &mut Grounded,
+        &mut ExternalImpulse,
         &mut Flippable,
     )>,
     mouse_pos: Res<MousePosition>,
 ) {
-    let (
-        mut player,
-        player_actions,
-        player_xform,
-        mut player_vel,
-        mut player_net_dir,
-        mut player_grounded,
-        mut player_flippable,
-    ) = player_qry.single_mut();
+    let (mut player, player_actions, player_xform, mut player_ext_impulse, mut player_flippable) =
+        player_qry.single_mut();
 
-    if player_actions.released(&PlayerAction::MoveLeft)
-        && player_actions.released(&PlayerAction::MoveRight)
-    {
-        player_net_dir.x = 0;
-    }
     if player_actions.pressed(&PlayerAction::MoveLeft) {
-        player_net_dir.x = -1;
+        player_ext_impulse.impulse.x = -100.;
         player_flippable.flip_x = true;
     }
     if player_actions.pressed(&PlayerAction::MoveRight) {
-        player_net_dir.x = 1;
+        player_ext_impulse.impulse.x = 100.;
         player_flippable.flip_x = false;
     }
     if player.can_attack && player_actions.just_pressed(&PlayerAction::Attack) {
@@ -151,81 +133,79 @@ fn player_input(
         player.is_attacking = true;
         player.can_attack = false;
     }
-    if player_grounded.0 {
-        player.is_jumping = false;
-        if player_actions.just_pressed(&PlayerAction::Jump) {
-            player.can_jump = true;
-        }
-    }
-    if player.can_jump {
-        player.can_jump = false;
-        player.is_jumping = true;
-        player_grounded.0 = false;
-        player_vel.linvel.y = 200.;
-    }
+    // if player_grounded.0 {
+    //     player.is_jumping = false;
+    //     if player_actions.just_pressed(&PlayerAction::Jump) {
+    //         player.can_jump = true;
+    //     }
+    // }
+    // if player.can_jump {
+    //     player.can_jump = false;
+    //     player.is_jumping = true;
+    //     player_grounded.0 = false;
+    //     player_vel.linvel.y = 200.;
+    // }
 }
 
-fn player_animation(
-    mut player_qry: Query<(
-        &mut Player,
-        &TextureAtlas,
-        &mut AnimationIndices,
-        &mut AnimationTimer,
-        &Grounded,
-        &NetDirection,
-    )>,
-) {
-    let (
-        mut player,
-        player_tex_atlas,
-        mut player_animation_idxs,
-        mut player_animation_timer,
-        player_grounded,
-        player_net_dir,
-    ) = player_qry.single_mut();
+// fn player_animation(
+//     mut player_qry: Query<(
+//         &mut Player,
+//         &TextureAtlas,
+//         &mut AnimationIndices,
+//         &mut AnimationTimer,
+//     )>,
+// ) {
+//     let (
+//         mut player,
+//         player_tex_atlas,
+//         mut player_animation_idxs,
+//         mut player_animation_timer,
+//         player_grounded,
+//         player_net_dir,
+//     ) = player_qry.single_mut();
 
-    let (attack_idxs, attack_timer) = (
-        AnimationIndices { first: 4, last: 6 },
-        AnimationTimer(Timer::from_seconds(0.5, TimerMode::Repeating)),
-    );
-    let (jump_idxs, jump_timer) = (
-        AnimationIndices { first: 3, last: 3 },
-        AnimationTimer(Timer::from_seconds(0., TimerMode::Repeating)),
-    );
-    let (walk_idxs, walk_timer) = (
-        AnimationIndices { first: 1, last: 2 },
-        AnimationTimer(Timer::from_seconds(0.3, TimerMode::Repeating)),
-    );
-    let (idle_idxs, idle_timer) = (
-        AnimationIndices { first: 0, last: 0 },
-        AnimationTimer(Timer::from_seconds(0., TimerMode::Repeating)),
-    );
+//     let (attack_idxs, attack_timer) = (
+//         AnimationIndices { first: 4, last: 6 },
+//         AnimationTimer(Timer::from_seconds(0.5, TimerMode::Repeating)),
+//     );
+//     let (jump_idxs, jump_timer) = (
+//         AnimationIndices { first: 3, last: 3 },
+//         AnimationTimer(Timer::from_seconds(0., TimerMode::Repeating)),
+//     );
+//     let (walk_idxs, walk_timer) = (
+//         AnimationIndices { first: 1, last: 2 },
+//         AnimationTimer(Timer::from_seconds(0.3, TimerMode::Repeating)),
+//     );
+//     let (idle_idxs, idle_timer) = (
+//         AnimationIndices { first: 0, last: 0 },
+//         AnimationTimer(Timer::from_seconds(0., TimerMode::Repeating)),
+//     );
 
-    if player.is_attacking {
-        if *player_animation_idxs != attack_idxs {
-            *player_animation_idxs = attack_idxs;
-            *player_animation_timer = attack_timer;
-        } else if player_tex_atlas.index == attack_idxs.last {
-            *player_animation_idxs = idle_idxs.clone();
-            *player_animation_timer = idle_timer;
-            player.is_attacking = false;
-        }
-    } else if player.is_jumping && !player_grounded.0 {
-        if *player_animation_idxs != jump_idxs {
-            *player_animation_idxs = jump_idxs;
-            *player_animation_timer = jump_timer;
-        }
-    } else if player_net_dir.x != 0 && player_grounded.0 {
-        if *player_animation_idxs != walk_idxs {
-            *player_animation_idxs = walk_idxs;
-            *player_animation_timer = walk_timer;
-        }
-    } else if *player_animation_idxs != idle_idxs {
-        *player_animation_idxs = idle_idxs.clone();
-        *player_animation_timer = idle_timer;
-    }
+//     if player.is_attacking {
+//         if *player_animation_idxs != attack_idxs {
+//             *player_animation_idxs = attack_idxs;
+//             *player_animation_timer = attack_timer;
+//         } else if player_tex_atlas.index == attack_idxs.last {
+//             *player_animation_idxs = idle_idxs.clone();
+//             *player_animation_timer = idle_timer;
+//             player.is_attacking = false;
+//         }
+//     } else if player.is_jumping && !player_grounded.0 {
+//         if *player_animation_idxs != jump_idxs {
+//             *player_animation_idxs = jump_idxs;
+//             *player_animation_timer = jump_timer;
+//         }
+//     } else if player_net_dir.x != 0 && player_grounded.0 {
+//         if *player_animation_idxs != walk_idxs {
+//             *player_animation_idxs = walk_idxs;
+//             *player_animation_timer = walk_timer;
+//         }
+//     } else if *player_animation_idxs != idle_idxs {
+//         *player_animation_idxs = idle_idxs.clone();
+//         *player_animation_timer = idle_timer;
+//     }
 
-    if *player_animation_idxs == idle_idxs {
-        player.can_attack = true;
-    }
-}
+//     if *player_animation_idxs == idle_idxs {
+//         player.can_attack = true;
+//     }
+// }

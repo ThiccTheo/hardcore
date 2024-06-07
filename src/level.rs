@@ -2,8 +2,8 @@ use {
     super::{
         game_state::GameState,
         player::{PlayerSpawnEvent, PLAYER_ID},
-        skeleton::{SkeletonSpawnEvent, SKELETON_ID},
-        slime::{SlimeSpawnEvent, SLIME_ID},
+        // skeleton::{SkeletonSpawnEvent, SKELETON_ID},
+        // slime::{SlimeSpawnEvent, SLIME_ID},
         tile::{TileSpawnEvent, TILE_ID, TILE_SIZE},
     },
     bevy::prelude::*,
@@ -153,8 +153,8 @@ pub fn signal_entity_spawns(
     tilemap_qry: Query<&Transform, With<TileStorage>>,
     mut tile_spawn_evw: EventWriter<TileSpawnEvent>,
     mut player_spawn_evw: EventWriter<PlayerSpawnEvent>,
-    mut skeleton_spawn_evw: EventWriter<SkeletonSpawnEvent>,
-    mut slime_spawn_evw: EventWriter<SlimeSpawnEvent>,
+    // mut skeleton_spawn_evw: EventWriter<SkeletonSpawnEvent>,
+    // mut slime_spawn_evw: EventWriter<SlimeSpawnEvent>,
 ) {
     let tilemap_xform = tilemap_qry.single();
 
@@ -199,12 +199,12 @@ pub fn signal_entity_spawns(
                                 tex_idx: TileTextureIndex(2),
                             });
                         }
-                        SKELETON_ID => {
-                            skeleton_spawn_evw.send(SkeletonSpawnEvent { pos: world_pos });
-                        }
-                        SLIME_ID => {
-                            slime_spawn_evw.send(SlimeSpawnEvent { pos: world_pos });
-                        }
+                        // SKELETON_ID => {
+                        //     skeleton_spawn_evw.send(SkeletonSpawnEvent { pos: world_pos });
+                        // }
+                        // SLIME_ID => {
+                        //     slime_spawn_evw.send(SlimeSpawnEvent { pos: world_pos });
+                        // }
                         _ => (),
                     }
                 }
