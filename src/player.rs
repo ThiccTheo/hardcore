@@ -29,6 +29,7 @@ impl Plugin for PlayerPlugin {
                 player_animation
                     .before(animation::adjust_sprite_indices)
                     .run_if(in_state(GameState::Playing)),
+
             )
             .add_systems(
                 FixedUpdate,
