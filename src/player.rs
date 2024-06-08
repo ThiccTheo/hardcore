@@ -95,16 +95,18 @@ fn on_player_spawn(
         Flippable::default(),
         AnimationIndices::default(),
         AnimationTimer(Timer::from_seconds(default(), TimerMode::Repeating)),
-        Collider::capsule_y(3.75, 4.),
-        ColliderMassProperties::Density(0.),
-        AdditionalMassProperties::MassProperties(MassProperties {
-            mass: 75.,
-            principal_inertia: 0.,
-            ..default()
-        }),
         RigidBody::Dynamic,
+        LockedAxes::ROTATION_LOCKED,
         ExternalImpulse::default(),
-    ));
+    ))
+    .with_children(|parent| {
+        parent.spawn((Collider::capsule_y(3.75, 4.), TransformBundle::default()));
+        parent.spawn((
+            Collider::cuboid(6., 0.5),
+            Sensor,
+            TransformBundle::from_transform(Transform::from_xyz(0., -8., 0.)),
+        ));
+    });
 }
 
 fn player_movement(
@@ -121,11 +123,11 @@ fn player_movement(
         player_qry.single_mut();
 
     if player_actions.pressed(&PlayerAction::MoveLeft) {
-        player_ext_impulse.impulse.x = -100.;
+        player_ext_impulse.impulse.x = -1.;
         player_flippable.flip_x = true;
     }
     if player_actions.pressed(&PlayerAction::MoveRight) {
-        player_ext_impulse.impulse.x = 100.;
+        player_ext_impulse.impulse.x = 1.;
         player_flippable.flip_x = false;
     }
     if player.can_attack && player_actions.just_pressed(&PlayerAction::Attack) {
