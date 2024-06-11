@@ -5,7 +5,7 @@ use {
         level,
         mouse_position::MousePosition,
         sprite_flip::Flippable,
-        status_effects::IsGrounded,
+        status_effects::{self, IsGrounded},
     },
     bevy::prelude::*,
     bevy_rapier2d::prelude::*,
@@ -79,6 +79,7 @@ fn on_player_spawn(
         LockedAxes::ROTATION_LOCKED,
         ExternalImpulse::default(),
         IsGrounded::default(),
+        Velocity::zero(),
     ));
 }
 
@@ -93,8 +94,14 @@ fn player_movement(
     )>,
     mouse_pos: Res<MousePosition>,
 ) {
-    let (mut player, player_actions, player_xform, mut player_ext_impulse, mut player_flippable, mut player_is_grounded) =
-        player_qry.single_mut();
+    let (
+        mut player,
+        player_actions,
+        player_xform,
+        mut player_ext_impulse,
+        mut player_flippable,
+        mut player_is_grounded,
+    ) = player_qry.single_mut();
     if player_actions.pressed(&PlayerAction::MoveLeft) {
         player_ext_impulse.impulse.x = -1.;
         player_flippable.flip_x = true;
@@ -118,7 +125,7 @@ fn player_movement(
         player.can_jump = false;
         player.is_jumping = true;
         player_is_grounded.0 = false;
-        player_ext_impulse.impulse.y = 10.;
+        player_ext_impulse.impulse.y = 50.;
     }
 }
 
@@ -129,6 +136,7 @@ fn player_animation(
         &mut AnimationIndices,
         &mut AnimationTimer,
         &IsGrounded,
+        &Velocity,
     )>,
 ) {
     let (
@@ -137,6 +145,7 @@ fn player_animation(
         mut player_animation_idxs,
         mut player_animation_timer,
         player_is_grounded,
+        player_vel,
     ) = player_qry.single_mut();
 
     let (attack_idxs, attack_timer) = (
@@ -170,12 +179,12 @@ fn player_animation(
             *player_animation_idxs = jump_idxs;
             *player_animation_timer = jump_timer;
         }
-    } /*else if player_net_dir.x != 0 && player_is_grounded.0 {
+    } else if player_vel.linvel.x != 0. && player_is_grounded.0 {
         if *player_animation_idxs != walk_idxs {
             *player_animation_idxs = walk_idxs;
             *player_animation_timer = walk_timer;
         }
-    }*/ else if *player_animation_idxs != idle_idxs {
+    } else if *player_animation_idxs != idle_idxs {
         *player_animation_idxs = idle_idxs.clone();
         *player_animation_timer = idle_timer;
     }
@@ -199,6 +208,8 @@ pub fn player_plugin(app: &mut App) {
         )
         .add_systems(
             FixedUpdate,
-            player_movement.run_if(in_state(GameState::Playing)),
+            player_movement
+                .after(status_effects::update_is_grounded)
+                .run_if(in_state(GameState::Playing)),
         );
 }

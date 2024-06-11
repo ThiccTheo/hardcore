@@ -1,6 +1,6 @@
 use {
     super::game_state::GameState,
-    bevy::{ecs::entity::EntityHashMap, prelude::*},
+    bevy::prelude::*,
     bevy_rapier2d::prelude::*,
     std::{f32::consts::TAU, time::Duration},
 };
@@ -20,12 +20,8 @@ impl Invincible {
     }
 }
 
-// HAS MOVED COULD BE BETTER
 #[derive(Component, Deref, DerefMut, Default)]
 pub struct IsGrounded(pub bool);
-
-#[derive(Resource, Default, Deref, DerefMut)]
-struct InitialYValues(EntityHashMap<f32>);
 
 fn update_invincibility(
     time: Res<Time>,
@@ -47,33 +43,29 @@ fn update_invincibility(
     }
 }
 
-fn collect_initial_y_values(
-    mut y0s: ResMut<InitialYValues>,
-    is_grounded_qry: Query<(Entity, &Transform), (With<RigidBody>, With<IsGrounded>)>,
+pub fn update_is_grounded(
+    mut is_grounded_qry: Query<(&Transform, &Collider, &mut IsGrounded), With<RigidBody>>,
+    rapier_ctx: Res<RapierContext>,
 ) {
-    y0s.extend(
-        is_grounded_qry
-            .iter()
-            .map(|(id, xform)| (id, xform.translation.y)),
-    );
-}
-
-fn update_is_grounded(
-    mut is_grounded_qry: Query<(Entity, &Transform, &mut IsGrounded), With<RigidBody>>,
-    mut y0s: ResMut<InitialYValues>,
-) {
-    for (id, xform, mut is_grounded) in is_grounded_qry.iter_mut() {
-        is_grounded.0 = y0s.get(&id).is_some_and(|&y0| y0 == xform.translation.y);
+    for (xform, collider, mut is_grounded) in is_grounded_qry.iter_mut() {
+        is_grounded.0 = rapier_ctx
+            .cast_shape(
+                xform.translation.truncate(),
+                xform.rotation.z,
+                -Vec2::Y,
+                collider,
+                0.5,
+                true,
+                QueryFilter::new(),
+            )
+            .is_some();
     }
-    y0s.clear();
 }
 
 pub fn status_effects_plugin(app: &mut App) {
-    app.insert_resource(InitialYValues::default())
-        .add_systems(
-            Update,
-            update_invincibility.run_if(in_state(GameState::Playing)),
-        )
-        .add_systems(FixedPreUpdate, collect_initial_y_values)
-        .add_systems(FixedPostUpdate, update_is_grounded);
+    app.add_systems(
+        Update,
+        update_invincibility.run_if(in_state(GameState::Playing)),
+    )
+    .add_systems(FixedUpdate, update_is_grounded);
 }
