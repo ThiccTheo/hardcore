@@ -4,22 +4,14 @@ use {
     std::{f32::consts::TAU, time::Duration},
 };
 
-const FLICKER_FREQUENCY: f32 = 5.;
-
-pub struct IframesPlugin;
-
-impl Plugin for IframesPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_systems(Update, update_iframes.run_if(in_state(GameState::Playing)));
-    }
-}
-
 #[derive(Component)]
-pub struct Iframes {
+pub struct Invincible {
     timer: Timer,
 }
 
-impl Iframes {
+impl Invincible {
+    const IFRAMES_FREQUENCY: f32 = 5.;
+
     pub fn new(duration: Duration) -> Self {
         Self {
             timer: Timer::new(duration, TimerMode::Once),
@@ -27,9 +19,11 @@ impl Iframes {
     }
 }
 
-fn update_iframes(
+pub struct Grounded;
+
+fn update_invincibility(
     time: Res<Time>,
-    mut iframes_qry: Query<(Entity, &mut Iframes, &mut Sprite)>,
+    mut iframes_qry: Query<(Entity, &mut Invincible, &mut Sprite)>,
     mut cmds: Commands,
 ) {
     let dt = time.delta();
@@ -37,12 +31,23 @@ fn update_iframes(
     for (id, mut iframes, mut sprite) in iframes_qry.iter_mut() {
         iframes.timer.tick(dt);
         sprite.color.set_a(f32::sin(
-            iframes.timer.elapsed_secs() * FLICKER_FREQUENCY * TAU,
+            iframes.timer.elapsed_secs() * Invincible::IFRAMES_FREQUENCY * TAU,
         ));
 
         if iframes.timer.just_finished() {
-            cmds.entity(id).remove::<Iframes>();
+            cmds.entity(id).remove::<Invincible>();
             sprite.color.set_a(1.);
         }
     }
+}
+
+fn update_grounded_ness(mut cmds: Commands) {
+
+}
+
+pub fn status_effects_plugin(app: &mut App) {
+    app.add_systems(
+        Update,
+        update_invincibility.run_if(in_state(GameState::Playing)),
+    );
 }

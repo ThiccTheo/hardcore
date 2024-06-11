@@ -3,23 +3,6 @@ use {
     bevy::prelude::*,
 };
 
-pub struct MainCameraPlugin;
-
-impl Plugin for MainCameraPlugin {
-    fn build(&self, app: &mut App) {
-        app.insert_resource(ClearColor(Color::rgb_u8(208, 187, 148)))
-            .add_systems(Startup, spawn_main_camera)
-            .add_systems(
-                Update,
-                clamp_camera_to_tilemap.run_if(in_state(GameState::Playing)),
-            )
-            .add_systems(
-                FixedPostUpdate,
-                follow_player.run_if(in_state(GameState::Playing)),
-            );
-    }
-}
-
 #[derive(Component)]
 pub struct MainCamera;
 
@@ -89,4 +72,17 @@ fn clamp_camera_to_tilemap(
             tilemap_top_px - cam_viewport.y / scale_correction,
         );
     }
+}
+
+pub fn main_camera_plugin(app: &mut App) {
+    app.insert_resource(ClearColor(Color::rgb_u8(208, 187, 148)))
+        .add_systems(Startup, spawn_main_camera)
+        .add_systems(
+            Update,
+            clamp_camera_to_tilemap.run_if(in_state(GameState::Playing)),
+        )
+        .add_systems(
+            FixedPostUpdate,
+            follow_player.run_if(in_state(GameState::Playing)),
+        );
 }

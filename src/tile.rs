@@ -12,21 +12,6 @@ const TILE_Z: f32 = 1.;
 pub const TILE_ID: u8 = TILE_Z as u8;
 pub const TILE_SIZE: Vec2 = Vec2::splat(16.);
 
-pub struct TilePlugin;
-
-impl Plugin for TilePlugin {
-    fn build(&self, app: &mut App) {
-        app.add_event::<TileSpawnEvent>().add_systems(
-            OnEnter(GameState::Playing),
-            (
-                spawn_tilemap.before(level::signal_entity_spawns),
-                on_tile_spawn.after(level::signal_entity_spawns),
-            )
-                .chain(),
-        );
-    }
-}
-
 #[derive(Event)]
 pub struct TileSpawnEvent {
     pub tile_pos: TilePos,
@@ -91,4 +76,15 @@ fn on_tile_spawn(
                 .insert(Collider::cuboid(TILE_SIZE.x / 2., TILE_SIZE.y / 2.));
         }
     }
+}
+
+pub fn tile_plugin(app: &mut App) {
+    app.add_event::<TileSpawnEvent>().add_systems(
+        OnEnter(GameState::Playing),
+        (
+            spawn_tilemap.before(level::signal_entity_spawns),
+            on_tile_spawn.after(level::signal_entity_spawns),
+        )
+            .chain(),
+    );
 }

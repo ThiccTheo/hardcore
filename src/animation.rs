@@ -1,13 +1,5 @@
 use bevy::prelude::*;
 
-pub struct AnimationPlugin;
-
-impl Plugin for AnimationPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_systems(Update, (adjust_sprite_indices, animate_sprites).chain());
-    }
-}
-
 #[derive(Component, PartialEq, Default, Clone)]
 pub struct AnimationIndices {
     pub first: usize,
@@ -37,4 +29,8 @@ fn animate_sprites(
                     % (animation_indices.last + 1 - animation_indices.first);
         }
     }
+}
+
+pub fn animation_plugin(app: &mut App) {
+    app.add_systems(Update, (adjust_sprite_indices, animate_sprites).chain());
 }

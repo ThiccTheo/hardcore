@@ -1,16 +1,5 @@
 use bevy::{prelude::*, sprite::Anchor};
 
-pub struct SpriteFlipPlugin;
-
-impl Plugin for SpriteFlipPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_systems(
-            Update,
-            (propagate_sprite_flips, convert_flippables_to_sprite_flips).chain(),
-        );
-    }
-}
-
 #[derive(Component, Default)]
 pub struct Flippable {
     pub flip_x: bool,
@@ -66,4 +55,11 @@ fn convert_flippables_to_sprite_flips(mut sprite_qry: Query<(&mut Sprite, &Flipp
             });
         }
     }
+}
+
+pub fn sprite_flip_plugin(app: &mut App) {
+    app.add_systems(
+        Update,
+        (propagate_sprite_flips, convert_flippables_to_sprite_flips).chain(),
+    );
 }

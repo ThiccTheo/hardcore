@@ -1,14 +1,5 @@
 use {super::game_state::GameState, bevy::prelude::*};
 
-pub struct CombatPlugin;
-
-impl Plugin for CombatPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_event::<DamageDealtEvent>()
-            .add_systems(Update, on_damage_dealt.run_if(in_state(GameState::Playing)));
-    }
-}
-
 #[derive(Component)]
 pub struct HitPoints(pub u8);
 
@@ -32,4 +23,9 @@ fn on_damage_dealt(
         };
         hp.0 = (hp.0 as i8 - dmg as i8).max(0) as u8;
     }
+}
+
+pub fn combat_plugin(app: &mut App) {
+    app.add_event::<DamageDealtEvent>()
+        .add_systems(Update, on_damage_dealt.run_if(in_state(GameState::Playing)));
 }

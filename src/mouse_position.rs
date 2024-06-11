@@ -3,15 +3,6 @@ use {
     bevy::{prelude::*, window::PrimaryWindow},
 };
 
-pub struct MousePositionPlugin;
-
-impl Plugin for MousePositionPlugin {
-    fn build(&self, app: &mut App) {
-        app.insert_resource(MousePosition::default())
-            .add_systems(Update, update_mouse_position);
-    }
-}
-
 #[derive(Resource, Deref, DerefMut, Default)]
 pub struct MousePosition(pub Vec2);
 
@@ -30,4 +21,9 @@ fn update_mouse_position(
         return;
     };
     old_mouse_pos.0 = new_mouse_pos;
+}
+
+pub fn mouse_position_plugin(app: &mut App) {
+    app.insert_resource(MousePosition::default())
+        .add_systems(Update, update_mouse_position);
 }

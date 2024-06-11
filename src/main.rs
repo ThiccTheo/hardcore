@@ -1,7 +1,6 @@
 mod animation;
 mod combat;
 mod game_state;
-mod iframes;
 mod level;
 mod main_camera;
 mod mouse_position;
@@ -9,11 +8,10 @@ mod player;
 mod skeleton;
 mod slime;
 mod sprite_flip;
+mod status_effects;
 mod tile;
-mod ui;
 
 use {
-    animation::AnimationPlugin,
     bevy::{
         diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
         prelude::*,
@@ -22,19 +20,9 @@ use {
     bevy_ecs_tilemap::TilemapPlugin,
     bevy_framepace::{FramepacePlugin, FramepaceSettings, Limiter},
     bevy_rapier2d::prelude::*,
-    combat::CombatPlugin,
     game_state::GameState,
-    iframes::IframesPlugin,
     leafwing_input_manager::prelude::*,
-    level::LevelPlugin,
-    main_camera::MainCameraPlugin,
-    mouse_position::MousePositionPlugin,
-    player::{PlayerAction, PlayerPlugin},
-    //skeleton::SkeletonPlugin,
-    //slime::SlimePlugin,
-    sprite_flip::SpriteFlipPlugin,
-    tile::TilePlugin,
-    ui::UiPlugin,
+    player::PlayerAction,
 };
 
 fn main() {
@@ -73,18 +61,17 @@ fn main() {
                 TilemapPlugin,
             ),
             (
-                MousePositionPlugin,
-                SpriteFlipPlugin,
-                AnimationPlugin,
-                MainCameraPlugin,
-                LevelPlugin,
-                TilePlugin,
-                PlayerPlugin,
-                //SkeletonPlugin,
-                //SlimePlugin,
-                CombatPlugin,
-                IframesPlugin,
-                UiPlugin,
+                mouse_position::mouse_position_plugin,
+                sprite_flip::sprite_flip_plugin,
+                animation::animation_plugin,
+                main_camera::main_camera_plugin,
+                level::level_plugin,
+                tile::tile_plugin,
+                player::player_plugin,
+                //skeleton::skeleton_plugin,
+                //slime::slime_plugin,
+                combat::combat_plugin,
+                status_effects::status_effects_plugin,
             ),
         ))
         .add_systems(PostStartup, cap_fps)

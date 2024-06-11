@@ -23,19 +23,6 @@ pub const LEVEL_SIZE: Vec2 = Vec2::new(
     SECTOR_SIZE.y * SECTOR_ROWS as f32,
 );
 
-pub struct LevelPlugin;
-
-impl Plugin for LevelPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_systems(
-            OnEnter(GameState::Playing),
-            generate_sector_layout
-                .pipe(generate_level_layout)
-                .pipe(signal_entity_spawns),
-        );
-    }
-}
-
 type LevelLayout =
     [[[[u8; SECTOR_SIZE.x as usize]; SECTOR_SIZE.y as usize]; SECTOR_COLS]; SECTOR_ROWS];
 
@@ -211,4 +198,13 @@ pub fn signal_entity_spawns(
             }
         }
     }
+}
+
+pub fn level_plugin(app: &mut App) {
+    app.add_systems(
+        OnEnter(GameState::Playing),
+        generate_sector_layout
+            .pipe(generate_level_layout)
+            .pipe(signal_entity_spawns),
+    );
 }

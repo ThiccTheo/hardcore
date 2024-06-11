@@ -14,28 +14,6 @@ use {
 const PLAYER_Z: f32 = 4.;
 pub const PLAYER_ID: u8 = PLAYER_Z as u8;
 
-pub struct PlayerPlugin;
-
-impl Plugin for PlayerPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_event::<PlayerSpawnEvent>()
-            .add_systems(
-                OnEnter(GameState::Playing),
-                on_player_spawn.after(level::signal_entity_spawns),
-            )
-            // .add_systems(
-            //     Update,
-            //     player_animation
-            //         .before(animation::adjust_sprite_indices)
-            //         .run_if(in_state(GameState::Playing)),
-            // )
-            .add_systems(
-                FixedUpdate,
-                player_movement.run_if(in_state(GameState::Playing)),
-            );
-    }
-}
-
 #[derive(Component, Default)]
 pub struct Player {
     pub can_jump: bool,
@@ -121,7 +99,6 @@ fn player_movement(
 ) {
     let (mut player, player_actions, player_xform, mut player_ext_impulse, mut player_flippable) =
         player_qry.single_mut();
-
     if player_actions.pressed(&PlayerAction::MoveLeft) {
         player_ext_impulse.impulse.x = -1.;
         player_flippable.flip_x = true;
@@ -211,3 +188,21 @@ fn player_movement(
 //         player.can_attack = true;
 //     }
 // }
+
+pub fn player_plugin(app: &mut App) {
+    app.add_event::<PlayerSpawnEvent>()
+        .add_systems(
+            OnEnter(GameState::Playing),
+            on_player_spawn.after(level::signal_entity_spawns),
+        )
+        // .add_systems(
+        //     Update,
+        //     player_animation
+        //         .before(animation::adjust_sprite_indices)
+        //         .run_if(in_state(GameState::Playing)),
+        // )
+        .add_systems(
+            FixedUpdate,
+            player_movement.run_if(in_state(GameState::Playing)),
+        );
+}
