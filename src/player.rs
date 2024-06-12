@@ -208,8 +208,6 @@ pub fn player_plugin(app: &mut App) {
         )
         .add_systems(
             FixedUpdate,
-            player_movement
-                .after(status_effects::update_is_grounded)
-                .run_if(in_state(GameState::Playing)),
+            player_movement.run_if(in_state(GameState::Playing)),
         );
 }

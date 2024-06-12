@@ -79,5 +79,5 @@ fn main() {
 }
 
 fn cap_fps(mut fps_settings: ResMut<FramepaceSettings>) {
-    fps_settings.limiter = Limiter::from_framerate(200.);
+    fps_settings.limiter = Limiter::from_framerate(64.);
 }

@@ -43,10 +43,11 @@ fn update_invincibility(
     }
 }
 
-pub fn update_is_grounded(
+fn update_is_grounded(
     mut is_grounded_qry: Query<(&Transform, &Collider, &mut IsGrounded), With<RigidBody>>,
     rapier_ctx: Res<RapierContext>,
 ) {
+    // SORTA BROKEN 
     for (xform, collider, mut is_grounded) in is_grounded_qry.iter_mut() {
         is_grounded.0 = rapier_ctx
             .cast_shape(
@@ -54,18 +55,20 @@ pub fn update_is_grounded(
                 xform.rotation.z,
                 -Vec2::Y,
                 collider,
-                0.5,
+                1.,
                 true,
-                QueryFilter::new(),
+                QueryFilter::exclude_dynamic(),
             )
-            .is_some();
+            .is_some_and(|(_, toi)| {
+                toi.details
+                    .is_some_and(|deets| deets.normal2.abs() == Vec2::Y)
+            });
     }
 }
 
 pub fn status_effects_plugin(app: &mut App) {
     app.add_systems(
         Update,
-        update_invincibility.run_if(in_state(GameState::Playing)),
-    )
-    .add_systems(FixedUpdate, update_is_grounded);
+        (update_invincibility, update_is_grounded).run_if(in_state(GameState::Playing)),
+    );
 }
