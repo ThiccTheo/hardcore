@@ -324,7 +324,7 @@ checksum = "6b281db362b953f876d955d6699c380ecc16a73dbefe397d82eabcc1ac9e98ed"
 dependencies = [
  "bevy",
  "bevy-tnua-physics-integration-layer",
- "bevy_rapier2d 0.26.0",
+ "bevy_rapier2d",
 ]
 
 [[package]]
@@ -449,7 +449,6 @@ dependencies = [
  "bevy_tasks",
  "bevy_utils",
  "bytemuck",
- "serde",
 ]
 
 [[package]]
@@ -543,16 +542,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bevy_ecs_tilemap"
-version = "0.12.0"
-source = "git+https://github.com/StarArawn/bevy_ecs_tilemap.git#e4f3cc668110d9a46f6fe407db4f6d4daeabc3d2"
-dependencies = [
- "bevy",
- "log",
- "regex",
-]
-
-[[package]]
 name = "bevy_encase_derive"
 version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -560,16 +549,6 @@ checksum = "887087a5e522d9f20733a84dd7e6e9ca04cd8fdfac659220ed87d675eebc83a7"
 dependencies = [
  "bevy_macro_utils",
  "encase_derive_impl",
-]
-
-[[package]]
-name = "bevy_framepace"
-version = "0.15.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0848c70deb2c17a4d10f611e7c5f569fa4f8a4d1fc01a3179a77906ff4c111b9"
-dependencies = [
- "bevy",
- "spin_sleep",
 ]
 
 [[package]]
@@ -677,7 +656,6 @@ dependencies = [
  "bevy_math",
  "bevy_reflect",
  "bevy_utils",
- "serde",
  "smol_str",
  "thiserror",
 ]
@@ -802,19 +780,6 @@ checksum = "8050e2869fe341db6874203b5a01ff12673807a2c7c80cb829f6c7bea6997268"
 
 [[package]]
 name = "bevy_rapier2d"
-version = "0.25.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dc1f2ef2ae7fcf68ccb33f95c1dfc7c679bbc0e33b7f2e461353073065ff6e1e"
-dependencies = [
- "bevy",
- "bitflags 2.5.0",
- "log",
- "nalgebra",
- "rapier2d 0.18.0",
-]
-
-[[package]]
-name = "bevy_rapier2d"
 version = "0.26.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ba1345b86420b31419534eb792760790c64566fbac6832b67560a091c957b067"
@@ -823,7 +788,7 @@ dependencies = [
  "bitflags 2.5.0",
  "log",
  "nalgebra",
- "rapier2d 0.19.0",
+ "rapier2d",
 ]
 
 [[package]]
@@ -1007,7 +972,6 @@ dependencies = [
  "bevy_reflect",
  "bevy_utils",
  "crossbeam-channel",
- "serde",
  "thiserror",
 ]
 
@@ -1022,7 +986,6 @@ dependencies = [
  "bevy_hierarchy",
  "bevy_math",
  "bevy_reflect",
- "serde",
  "thiserror",
 ]
 
@@ -1050,7 +1013,6 @@ dependencies = [
  "bevy_utils",
  "bevy_window",
  "bytemuck",
- "serde",
  "taffy",
  "thiserror",
 ]
@@ -1099,7 +1061,6 @@ dependencies = [
  "bevy_reflect",
  "bevy_utils",
  "raw-window-handle",
- "serde",
  "smol_str",
 ]
 
@@ -2089,12 +2050,7 @@ dependencies = [
  "bevy",
  "bevy-tnua",
  "bevy-tnua-rapier2d",
- "bevy_ecs_tilemap",
- "bevy_framepace",
- "bevy_rapier2d 0.25.0",
- "bitflags 2.5.0",
- "leafwing-input-manager",
- "rand",
+ "bevy_rapier2d",
 ]
 
 [[package]]
@@ -2307,31 +2263,6 @@ name = "lazycell"
 version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "830d08ce1d1d941e6b30645f1a0eb5643013d835ce3779a5fc208261dbe10f55"
-
-[[package]]
-name = "leafwing-input-manager"
-version = "0.13.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "def515aa1461ed6ed5d55d53cea6c7149a3076c331cfea1d920682884bfaf839"
-dependencies = [
- "bevy",
- "derive_more",
- "itertools",
- "leafwing_input_manager_macros",
- "serde",
-]
-
-[[package]]
-name = "leafwing_input_manager_macros"
-version = "0.13.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5d065e4f0771d9cc597e76d648da18476ad01fd50cd60ee585ee500f9cd8d696"
-dependencies = [
- "proc-macro-crate",
- "proc-macro2",
- "quote",
- "syn 2.0.66",
-]
 
 [[package]]
 name = "lewton"
@@ -2878,27 +2809,6 @@ dependencies = [
 
 [[package]]
 name = "parry2d"
-version = "0.13.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9fd94bf962ead112f14223469aac6f76e3c24e2c399e348f638924498b238c56"
-dependencies = [
- "approx",
- "arrayvec",
- "bitflags 1.3.2",
- "downcast-rs",
- "either",
- "nalgebra",
- "num-derive",
- "num-traits",
- "rustc-hash",
- "simba",
- "slab",
- "smallvec",
- "spade",
-]
-
-[[package]]
-name = "parry2d"
 version = "0.15.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "41c56bf3b44b08f18a6ed01e5c6bf1a41a12efc7e8b806ce0cf50831c88f9fc8"
@@ -3002,12 +2912,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ppv-lite86"
-version = "0.2.17"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b40af805b3121feab8a3c29f04d8ad262fa8e0561883e7653e024ae4479e6de"
-
-[[package]]
 name = "presser"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3053,60 +2957,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "17fd96390ed3feda12e1dfe2645ed587e0bea749e319333f104a33ff62f77a0b"
 
 [[package]]
-name = "rand"
-version = "0.8.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "34af8d1a0e25924bc5b7c43c079c942339d8f0a8b57c39049bef581b46327404"
-dependencies = [
- "libc",
- "rand_chacha",
- "rand_core",
-]
-
-[[package]]
-name = "rand_chacha"
-version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e6c10a63a0fa32252be49d21e7709d4d4baf8d231c2dbce1eaa8141b9b127d88"
-dependencies = [
- "ppv-lite86",
- "rand_core",
-]
-
-[[package]]
-name = "rand_core"
-version = "0.6.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ec0be4795e2f6a28069bec0b5ff3e2ac9bafc99e6a9a7dc3547996c5c816922c"
-dependencies = [
- "getrandom",
-]
-
-[[package]]
 name = "range-alloc"
 version = "0.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9c8a99fddc9f0ba0a85884b8d14e3592853e787d581ca1816c91349b10e4eeab"
-
-[[package]]
-name = "rapier2d"
-version = "0.18.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "48a3ec4ae89e0837c0ff6f29af32a8e5d78dfabe2273dcd945cfaf3f5d2b1501"
-dependencies = [
- "approx",
- "arrayvec",
- "bit-vec",
- "bitflags 1.3.2",
- "crossbeam",
- "downcast-rs",
- "nalgebra",
- "num-derive",
- "num-traits",
- "parry2d 0.13.8",
- "rustc-hash",
- "simba",
-]
 
 [[package]]
 name = "rapier2d"
@@ -3125,7 +2979,7 @@ dependencies = [
  "num-derive",
  "num-traits",
  "ordered-float",
- "parry2d 0.15.1",
+ "parry2d",
  "rustc-hash",
  "simba",
 ]
@@ -3424,15 +3278,6 @@ dependencies = [
  "num-traits",
  "robust",
  "smallvec",
-]
-
-[[package]]
-name = "spin_sleep"
-version = "1.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "368a978649eaf70006b082e79c832bd72556ac1393eaf564d686e919dca2347f"
-dependencies = [
- "windows-sys 0.52.0",
 ]
 
 [[package]]

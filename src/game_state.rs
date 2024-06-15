@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-#[derive(States, Default, Debug, Hash, PartialEq, Eq, Clone)]
+#[derive(States, Debug, Hash, PartialEq, Eq, Clone, Default)]
 pub enum GameState {
     #[default]
     Playing,

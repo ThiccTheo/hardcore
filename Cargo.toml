@@ -5,14 +5,9 @@ edition = "2021"
 
 [dependencies]
 bevy = { version = "0.13.2", features = ["dynamic_linking"] }
-bevy_rapier2d = "0.25.0"
-leafwing-input-manager = "0.13.3"
-bevy_ecs_tilemap = { git = "https://github.com/StarArawn/bevy_ecs_tilemap.git" }
-rand = "0.8.5"
-bitflags = "2.5.0"
-bevy_framepace = "0.15.0"
 bevy-tnua = "0.18.0"
 bevy-tnua-rapier2d = "0.6.0"
+bevy_rapier2d = "0.26.0"
 
 # Enable a small amount of optimization in debug mode
 [profile.dev]
