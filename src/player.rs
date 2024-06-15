@@ -5,7 +5,7 @@ use {
         level,
         mouse_position::MousePosition,
         sprite_flip::Flippable,
-        status_effects::{self, IsGrounded},
+        //status_effects::{self, IsGrounded},
     },
     bevy::prelude::*,
     bevy_rapier2d::prelude::*,
@@ -78,9 +78,9 @@ fn on_player_spawn(
         RigidBody::Dynamic,
         LockedAxes::ROTATION_LOCKED,
         ExternalImpulse::default(),
-        IsGrounded::default(),
+        // IsGrounded::default(),
         Velocity::zero(),
-        Restitution::coefficient(0.)
+        Restitution::coefficient(0.),
     ));
 }
 
