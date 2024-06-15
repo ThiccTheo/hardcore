@@ -53,7 +53,7 @@ fn main() {
                         ..default()
                     }),
                 FrameTimeDiagnosticsPlugin,
-                LogDiagnosticsPlugin::default(),
+                // LogDiagnosticsPlugin::default(),
                 FramepacePlugin,
                 RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(16.).in_fixed_schedule(),
                 RapierDebugRenderPlugin::default(),

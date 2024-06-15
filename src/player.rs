@@ -80,6 +80,7 @@ fn on_player_spawn(
         ExternalImpulse::default(),
         IsGrounded::default(),
         Velocity::zero(),
+        Restitution::coefficient(0.)
     ));
 }
 

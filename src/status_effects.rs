@@ -1,6 +1,7 @@
 use {
     super::game_state::GameState,
     bevy::prelude::*,
+    bevy_ecs_tilemap::prelude::*,
     bevy_rapier2d::prelude::*,
     std::{f32::consts::TAU, time::Duration},
 };
@@ -45,30 +46,34 @@ fn update_invincibility(
 
 fn update_is_grounded(
     mut is_grounded_qry: Query<(&Transform, &Collider, &mut IsGrounded), With<RigidBody>>,
+    tile_qry: Query<(), (With<TilePos>, With<Collider>)>,
     rapier_ctx: Res<RapierContext>,
 ) {
-    // SORTA BROKEN 
     for (xform, collider, mut is_grounded) in is_grounded_qry.iter_mut() {
+        let mut collider = collider.clone();
+        collider.set_scale(collider.scale() * Vec2::new(0.9, 0.9), 100);
+
         is_grounded.0 = rapier_ctx
             .cast_shape(
                 xform.translation.truncate(),
                 xform.rotation.z,
                 -Vec2::Y,
-                collider,
+                &collider,
                 1.,
                 true,
-                QueryFilter::exclude_dynamic(),
+                QueryFilter::new().predicate(&|id| tile_qry.contains(id)),
             )
-            .is_some_and(|(_, toi)| {
-                toi.details
-                    .is_some_and(|deets| deets.normal2.abs() == Vec2::Y)
-            });
+            .is_some_and(|(_, toi)| toi.details.is_some_and(|deets| deets.normal1.y == 1.));
     }
 }
 
 pub fn status_effects_plugin(app: &mut App) {
     app.add_systems(
         Update,
-        (update_invincibility, update_is_grounded).run_if(in_state(GameState::Playing)),
+        update_invincibility.run_if(in_state(GameState::Playing)),
+    )
+    .add_systems(
+        FixedPostUpdate,
+        update_is_grounded.run_if(in_state(GameState::Playing)),
     );
 }
