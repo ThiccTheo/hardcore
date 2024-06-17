@@ -42,6 +42,28 @@ bitflags! {
     }
 }
 
+#[derive(Resource)]
+pub struct LevelData {
+    world: u8,
+    level: u8,
+}
+
+impl LevelData {
+    fn update(&mut self) {
+        if self.level == 1 {
+            self.world += 1;
+            self.level = 0;
+        }
+        self.level += 1;
+    }
+}
+
+impl Default for LevelData {
+    fn default() -> Self {
+        Self { world: 4, level: 1 }
+    }
+}
+
 fn generate_sector_layout() -> SectorLayout {
     let mut sector_layout = [[SectorType::CLOSED; SECTOR_COLS]; SECTOR_ROWS];
 
@@ -137,6 +159,7 @@ fn generate_level_layout(In(sector_layout): In<SectorLayout>) -> LevelLayout {
 
 pub fn signal_entity_spawns(
     In(level_layout): In<LevelLayout>,
+    level_data: Res<LevelData>,
     tilemap_qry: Query<&Transform, With<TileStorage>>,
     mut tile_spawn_evw: EventWriter<TileSpawnEvent>,
     mut player_spawn_evw: EventWriter<PlayerSpawnEvent>,
@@ -168,7 +191,8 @@ pub fn signal_entity_spawns(
                             tile_spawn_evw.send(TileSpawnEvent {
                                 tile_pos,
                                 world_pos,
-                                tex_idx: TileTextureIndex(0),
+                                tex_idx: TileTextureIndex(5 + level_data.world as u32),
+                                has_collider: true,
                             });
                         }
                         PLAYER_ID => {
@@ -176,14 +200,16 @@ pub fn signal_entity_spawns(
                             tile_spawn_evw.send(TileSpawnEvent {
                                 tile_pos,
                                 world_pos,
-                                tex_idx: TileTextureIndex(76),
+                                tex_idx: TileTextureIndex(75 + level_data.world as u32),
+                                has_collider: false,
                             });
                         }
                         EXIT_ID => {
                             tile_spawn_evw.send(TileSpawnEvent {
                                 tile_pos,
                                 world_pos,
-                                tex_idx: TileTextureIndex(90),
+                                tex_idx: TileTextureIndex(75),
+                                has_collider: false,
                             });
                         }
                         // SKELETON_ID => {
@@ -201,7 +227,7 @@ pub fn signal_entity_spawns(
 }
 
 pub fn level_plugin(app: &mut App) {
-    app.add_systems(
+    app.insert_resource(LevelData::default()).add_systems(
         OnEnter(GameState::Playing),
         generate_sector_layout
             .pipe(generate_level_layout)

@@ -17,6 +17,7 @@ pub struct TileSpawnEvent {
     pub tile_pos: TilePos,
     pub world_pos: Vec2,
     pub tex_idx: TileTextureIndex,
+    pub has_collider: bool,
 }
 
 fn spawn_tilemap(mut cmds: Commands, asset_server: Res<AssetServer>) {
@@ -54,6 +55,7 @@ fn on_tile_spawn(
         tile_pos,
         world_pos,
         tex_idx,
+        has_collider,
     } in tile_spawn_evr.read()
     {
         let tile_id = cmds
@@ -71,7 +73,7 @@ fn on_tile_spawn(
             .id();
         tile_storage.set(&tile_pos, tile_id);
 
-        if tex_idx.0 == 0 {
+        if has_collider {
             cmds.entity(tile_id)
                 .insert(Collider::cuboid(TILE_SIZE.x / 2., TILE_SIZE.y / 2.));
         }

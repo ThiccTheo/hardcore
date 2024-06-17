@@ -5,6 +5,7 @@ use {
     bevy_tnua::{control_helpers::TnuaSimpleAirActionsCounter, prelude::*, TnuaGhostSensor},
     bevy_tnua_rapier2d::{TnuaRapier2dIOBundle, TnuaRapier2dSensorShape},
     leafwing_input_manager::prelude::*,
+    std::f32::consts::FRAC_PI_4,
 };
 
 const PLAYER_Z: f32 = 4.;
@@ -57,12 +58,12 @@ fn on_player_spawn(
         ])),
         RigidBody::Dynamic,
         LockedAxes::ROTATION_LOCKED,
-        Collider::cuboid(16., 32.),
+        Collider::capsule_y(16., 16.),
         TnuaRapier2dIOBundle::default(),
         TnuaControllerBundle::default(),
         TnuaSimpleAirActionsCounter::default(),
         TnuaGhostSensor::default(),
-        TnuaRapier2dSensorShape(Collider::cuboid(16., 0.5)),
+        TnuaRapier2dSensorShape(Collider::cuboid(14., 0.)),
     ));
 }
 
@@ -77,21 +78,22 @@ fn player_movement(
     player_air_actions_count.update(&player_kcc);
 
     player_kcc.basis(TnuaBuiltinWalk {
+        max_slope: FRAC_PI_4,
+        spring_dampening: 0.5,
         float_height: 55.,
         desired_velocity: (if player_in.pressed(&PlayerAction::MoveLeft) {
-            -Vec2::X * 200.
+            -Vec3::X * 256.
         } else if player_in.pressed(&PlayerAction::MoveRight) {
-            Vec2::X * 200.
+            Vec3::X * 256.
         } else {
-            Vec2::ZERO
-        })
-        .extend(0.),
+            Vec3::ZERO
+        }),
         ..default()
     });
 
     if player_in.pressed(&PlayerAction::Jump) {
         player_kcc.action(TnuaBuiltinJump {
-            height: 100.,
+            height: 128.,
             allow_in_air: false,
             shorten_extra_gravity: 0.,
             ..default()
