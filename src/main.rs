@@ -4,6 +4,7 @@ mod player;
 use {
     bevy::prelude::*, bevy_rapier2d::prelude::*, bevy_tnua::prelude::*,
     bevy_tnua_rapier2d::TnuaRapier2dPlugin, game_state::GameState,
+    leafwing_input_manager::prelude::*, player::PlayerAction,
 };
 
 fn main() {
@@ -20,6 +21,7 @@ fn main() {
         .add_plugins((
             (
                 DefaultPlugins,
+                InputManagerPlugin::<PlayerAction>::default(),
                 RapierPhysicsPlugin::<NoUserData>::default().in_fixed_schedule(),
                 RapierDebugRenderPlugin::default(),
                 TnuaRapier2dPlugin::new(FixedUpdate),
