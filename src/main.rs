@@ -1,10 +1,13 @@
 mod game_state;
+mod level;
 mod player;
+mod tile;
+mod main_camera;
 
 use {
     bevy::prelude::*, bevy_rapier2d::prelude::*, bevy_tnua::prelude::*,
     bevy_tnua_rapier2d::TnuaRapier2dPlugin, game_state::GameState,
-    leafwing_input_manager::prelude::*, player::PlayerAction,
+    leafwing_input_manager::prelude::*, player::PlayerAction, tile::TILE_SIZE,
 };
 
 fn main() {
@@ -22,12 +25,17 @@ fn main() {
             (
                 DefaultPlugins,
                 InputManagerPlugin::<PlayerAction>::default(),
-                RapierPhysicsPlugin::<NoUserData>::default().in_fixed_schedule(),
+                RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(TILE_SIZE.x).in_fixed_schedule(),
                 RapierDebugRenderPlugin::default(),
                 TnuaRapier2dPlugin::new(FixedUpdate),
                 TnuaControllerPlugin::new(FixedUpdate),
             ),
-            (player::player_plugin),
+            (
+                main_camera::main_camera_plugin,
+                level::level_plugin,
+                player::player_plugin,
+                tile::tile_plugin,
+            ),
         ))
         .run();
 }

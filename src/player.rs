@@ -1,11 +1,17 @@
 use {
-    super::game_state::GameState,
+    super::{game_state::GameState, level},
     bevy::prelude::*,
     bevy_rapier2d::prelude::*,
     bevy_tnua::{control_helpers::TnuaSimpleAirActionsCounter, prelude::*, TnuaGhostSensor},
     bevy_tnua_rapier2d::{TnuaRapier2dIOBundle, TnuaRapier2dSensorShape},
     leafwing_input_manager::prelude::*,
 };
+
+const PLAYER_Z: f32 = 4.;
+pub const PLAYER_ID: u8 = PLAYER_Z as u8;
+
+#[derive(Component)]
+pub struct Player;
 
 #[derive(Actionlike, PartialEq, Eq, Hash, Clone, Reflect)]
 pub enum PlayerAction {
@@ -14,14 +20,34 @@ pub enum PlayerAction {
     Jump,
 }
 
-fn on_player_spawn(mut cmds: Commands) {
+#[derive(Event)]
+pub struct PlayerSpawnEvent {
+    pub pos: Vec2,
+}
+
+fn on_player_spawn(
+    mut player_spawn_evr: EventReader<PlayerSpawnEvent>,
+    mut cmds: Commands,
+    asset_server: Res<AssetServer>,
+    mut tex_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
+) {
     cmds.spawn((
-        SpriteBundle {
-            sprite: Sprite {
-                color: Color::RED,
-                custom_size: Some(Vec2::splat(32.)),
-                ..default()
+        Player,
+        SpriteSheetBundle {
+            texture: asset_server.load("player.png"),
+            atlas: TextureAtlas {
+                layout: tex_atlas_layouts.add(TextureAtlasLayout::from_grid(
+                    Vec2::new(80., 110.),
+                    9,
+                    3,
+                    None,
+                    None,
+                )),
+                index: 0,
             },
+            transform: Transform::from_translation(
+                player_spawn_evr.read().next().unwrap().pos.extend(PLAYER_Z),
+            ),
             ..default()
         },
         InputManagerBundle::with_map(InputMap::new([
@@ -30,21 +56,13 @@ fn on_player_spawn(mut cmds: Commands) {
             (PlayerAction::Jump, KeyCode::Space),
         ])),
         RigidBody::Dynamic,
-        Collider::cuboid(16., 16.),
+        LockedAxes::ROTATION_LOCKED,
+        Collider::cuboid(16., 32.),
         TnuaRapier2dIOBundle::default(),
         TnuaControllerBundle::default(),
         TnuaSimpleAirActionsCounter::default(),
         TnuaGhostSensor::default(),
         TnuaRapier2dSensorShape(Collider::cuboid(16., 0.5)),
-    ))
-    .with_children(|parent| {
-        parent.spawn(Camera2dBundle::default());
-    });
-
-    cmds.spawn((
-        Collider::cuboid(100., 100.),
-        RigidBody::Fixed,
-        TransformBundle::from_transform(Transform::from_xyz(0., -500., 0.)),
     ));
 }
 
@@ -59,11 +77,11 @@ fn player_movement(
     player_air_actions_count.update(&player_kcc);
 
     player_kcc.basis(TnuaBuiltinWalk {
-        float_height: 30.,
+        float_height: 30. + 20.,
         desired_velocity: (if player_in.pressed(&PlayerAction::MoveLeft) {
-            -Vec2::X * 10.
+            -Vec2::X * 30.
         } else if player_in.pressed(&PlayerAction::MoveRight) {
-            Vec2::X * 10.
+            Vec2::X * 30.
         } else {
             Vec2::ZERO
         })
@@ -82,7 +100,11 @@ fn player_movement(
 }
 
 pub fn player_plugin(app: &mut App) {
-    app.add_systems(OnEnter(GameState::Playing), on_player_spawn)
+    app.add_event::<PlayerSpawnEvent>()
+        .add_systems(
+            OnEnter(GameState::Playing),
+            on_player_spawn.after(level::signal_entity_spawns),
+        )
         .add_systems(
             FixedUpdate,
             player_movement
