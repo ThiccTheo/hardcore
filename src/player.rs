@@ -77,11 +77,11 @@ fn player_movement(
     player_air_actions_count.update(&player_kcc);
 
     player_kcc.basis(TnuaBuiltinWalk {
-        float_height: 30. + 20.,
+        float_height: 55.,
         desired_velocity: (if player_in.pressed(&PlayerAction::MoveLeft) {
-            -Vec2::X * 30.
+            -Vec2::X * 200.
         } else if player_in.pressed(&PlayerAction::MoveRight) {
-            Vec2::X * 30.
+            Vec2::X * 200.
         } else {
             Vec2::ZERO
         })

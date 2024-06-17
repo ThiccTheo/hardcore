@@ -168,7 +168,7 @@ pub fn signal_entity_spawns(
                             tile_spawn_evw.send(TileSpawnEvent {
                                 tile_pos,
                                 world_pos,
-                                tex_idx: TileTextureIndex(10),
+                                tex_idx: TileTextureIndex(0),
                             });
                         }
                         PLAYER_ID => {
@@ -176,14 +176,14 @@ pub fn signal_entity_spawns(
                             tile_spawn_evw.send(TileSpawnEvent {
                                 tile_pos,
                                 world_pos,
-                                tex_idx: TileTextureIndex(1),
+                                tex_idx: TileTextureIndex(76),
                             });
                         }
                         EXIT_ID => {
                             tile_spawn_evw.send(TileSpawnEvent {
                                 tile_pos,
                                 world_pos,
-                                tex_idx: TileTextureIndex(2),
+                                tex_idx: TileTextureIndex(90),
                             });
                         }
                         // SKELETON_ID => {

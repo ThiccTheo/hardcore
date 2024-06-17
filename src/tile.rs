@@ -31,7 +31,7 @@ fn spawn_tilemap(mut cmds: Commands, asset_server: Res<AssetServer>) {
             x: LEVEL_SIZE.x as u32,
             y: LEVEL_SIZE.y as u32,
         }),
-        texture: TilemapTexture::Single(asset_server.load("bruh.png")),
+        texture: TilemapTexture::Single(asset_server.load("tile.png")),
         tile_size: TILE_SIZE.into(),
         transform: get_tilemap_center_transform(
             &TilemapSize::new(LEVEL_SIZE.x as u32, LEVEL_SIZE.y as u32),
@@ -71,7 +71,7 @@ fn on_tile_spawn(
             .id();
         tile_storage.set(&tile_pos, tile_id);
 
-        if tex_idx.0 == 10 {
+        if tex_idx.0 == 0 {
             cmds.entity(tile_id)
                 .insert(Collider::cuboid(TILE_SIZE.x / 2., TILE_SIZE.y / 2.));
         }

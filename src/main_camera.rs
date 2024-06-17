@@ -7,9 +7,7 @@ use {
 pub struct MainCamera;
 
 fn spawn_main_camera(mut cmds: Commands) {
-    let mut cam = Camera2dBundle::default();
-    cam.projection.scale *= 10.;
-    cmds.spawn((MainCamera, cam));
+    cmds.spawn((MainCamera, Camera2dBundle::default()));
 }
 
 fn follow_player(
