@@ -1,6 +1,6 @@
 use {
-    super::{game_state::GameState, level},
-    bevy::prelude::*,
+    super::{game_state::GameState, level, tile::TILE_SIZE},
+    bevy::{math::swizzles, prelude::*},
     bevy_rapier2d::prelude::*,
     bevy_tnua::{control_helpers::TnuaSimpleAirActionsCounter, prelude::*, TnuaGhostSensor},
     bevy_tnua_rapier2d::{TnuaRapier2dIOBundle, TnuaRapier2dSensorShape},
@@ -81,19 +81,21 @@ fn player_movement(
         max_slope: FRAC_PI_4,
         spring_dampening: 0.5,
         float_height: 55.,
-        desired_velocity: (if player_in.pressed(&PlayerAction::MoveLeft) {
-            -Vec3::X * 256.
-        } else if player_in.pressed(&PlayerAction::MoveRight) {
-            Vec3::X * 256.
-        } else {
-            Vec3::ZERO
-        }),
+        desired_velocity: 3.
+            * TILE_SIZE.x
+            * if player_in.pressed(&PlayerAction::MoveLeft) {
+                -Vec3::X
+            } else if player_in.pressed(&PlayerAction::MoveRight) {
+                Vec3::X
+            } else {
+                Vec3::ZERO
+            },
         ..default()
     });
 
     if player_in.pressed(&PlayerAction::Jump) {
         player_kcc.action(TnuaBuiltinJump {
-            height: 128.,
+            height: TILE_SIZE.y * 1.5,
             allow_in_air: false,
             shorten_extra_gravity: 0.,
             ..default()

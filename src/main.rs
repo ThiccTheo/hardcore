@@ -9,7 +9,16 @@ use {
         //diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
         prelude::*,
         window::{PresentMode, WindowMode, WindowResolution},
-    }, bevy_ecs_tilemap::prelude::*, bevy_framepace::{FramepacePlugin, FramepaceSettings, Limiter}, bevy_rapier2d::prelude::*, bevy_tnua::prelude::*, bevy_tnua_rapier2d::TnuaRapier2dPlugin, game_state::GameState, leafwing_input_manager::prelude::*, player::PlayerAction, tile::TILE_SIZE
+    },
+    bevy_ecs_tilemap::prelude::*,
+    bevy_framepace::{FramepacePlugin, FramepaceSettings, Limiter},
+    bevy_rapier2d::prelude::*,
+    bevy_tnua::prelude::*,
+    bevy_tnua_rapier2d::TnuaRapier2dPlugin,
+    game_state::GameState,
+    leafwing_input_manager::prelude::*,
+    player::PlayerAction,
+    tile::TILE_SIZE,
 };
 
 fn main() {
@@ -43,7 +52,7 @@ fn main() {
                 InputManagerPlugin::<PlayerAction>::default(),
                 RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(TILE_SIZE.x)
                     .in_fixed_schedule(),
-                RapierDebugRenderPlugin::default(),
+                //RapierDebugRenderPlugin::default(),
                 TnuaRapier2dPlugin::new(FixedUpdate),
                 TnuaControllerPlugin::new(FixedUpdate),
                 TilemapPlugin,
