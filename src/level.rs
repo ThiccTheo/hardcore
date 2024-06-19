@@ -10,6 +10,7 @@ use {
     bevy_ecs_tilemap::prelude::*,
     bitflags::bitflags,
     rand::Rng,
+    static_assertions::const_assert,
     std::cmp::Ordering,
 };
 
@@ -17,11 +18,14 @@ const BG_ID: u8 = 0;
 const EXIT_ID: u8 = u8::MAX;
 const SECTOR_COLS: usize = 4;
 const SECTOR_ROWS: usize = 4;
-const SECTOR_SIZE: Vec2 = Vec2::new(16., 8.);
+const SECTOR_SIZE: Vec2 = Vec2::new(8., 8.);
 pub const LEVEL_SIZE: Vec2 = Vec2::new(
     SECTOR_SIZE.x * SECTOR_COLS as f32,
     SECTOR_SIZE.y * SECTOR_ROWS as f32,
 );
+
+const_assert!(SECTOR_COLS >= 1 && SECTOR_ROWS >= 2);
+const_assert!(SECTOR_SIZE.x >= 4. && SECTOR_SIZE.y >= 4.);
 
 type LevelLayout =
     [[[[u8; SECTOR_SIZE.x as usize]; SECTOR_SIZE.y as usize]; SECTOR_COLS]; SECTOR_ROWS];

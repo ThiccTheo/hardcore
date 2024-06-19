@@ -2091,6 +2091,7 @@ dependencies = [
  "bitflags 2.5.0",
  "leafwing-input-manager",
  "rand",
+ "static_assertions",
 ]
 
 [[package]]
