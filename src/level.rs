@@ -148,6 +148,10 @@ fn generate_level_layout(In(sector_layout): In<SectorLayout>) -> LevelLayout {
             }
             if sector_type.intersects(SectorType::ENTRANCE) {
                 sector_contents[SECTOR_SIZE.y as usize - 2][SECTOR_SIZE.x as usize / 2] = PLAYER_ID;
+                if sector_type.intersects(SectorType::OPEN_DOWN) {
+                    sector_contents[SECTOR_SIZE.y as usize - 1][SECTOR_SIZE.x as usize / 2] =
+                        TILE_ID;
+                }
             } else if sector_type.intersects(SectorType::EXIT) {
                 sector_contents[SECTOR_SIZE.y as usize - 2][SECTOR_SIZE.x as usize / 2] = EXIT_ID;
             }

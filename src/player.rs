@@ -103,6 +103,8 @@ fn player_movement(
         max_slope: FRAC_PI_4,
         spring_dampening: 0.5,
         float_height: 50.,
+        air_acceleration: 2. * TILE_SIZE.x,
+        acceleration: 2. * TILE_SIZE.x,
         desired_velocity: 3.
             * TILE_SIZE.x
             * if player_in.pressed(&PlayerAction::MoveLeft)

@@ -2,6 +2,7 @@ mod animation;
 mod game_state;
 mod level;
 mod main_camera;
+mod mouse_position;
 mod player;
 mod sprite_flip;
 mod tile;
@@ -61,6 +62,7 @@ fn main() {
             ),
             (
                 main_camera::main_camera_plugin,
+                mouse_position::mouse_position_plugin,
                 sprite_flip::sprite_flip_plugin,
                 animation::animation_plugin,
                 level::level_plugin,
@@ -73,5 +75,5 @@ fn main() {
 }
 
 fn cap_fps(mut fps_settings: ResMut<FramepaceSettings>) {
-    fps_settings.limiter = Limiter::from_framerate(64.);
+    fps_settings.limiter = Limiter::from_framerate(500.);
 }
