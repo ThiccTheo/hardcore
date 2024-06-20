@@ -4,6 +4,7 @@ mod level;
 mod main_camera;
 mod mouse_position;
 mod player;
+mod spike;
 mod sprite_flip;
 mod tile;
 
@@ -73,6 +74,7 @@ fn main() {
                 level::level_plugin,
                 player::player_plugin,
                 tile::tile_plugin,
+                spike::spike_plugin,
             ),
         ))
         .add_systems(PostStartup, cap_fps)

@@ -2,8 +2,7 @@ use {
     super::{
         game_state::GameState,
         player::{PlayerSpawnEvent, PLAYER_ID},
-        // skeleton::{SkeletonSpawnEvent, SKELETON_ID},
-        // slime::{SlimeSpawnEvent, SLIME_ID},
+        spike::{SpikeSpawnEvent, SPIKE_ID},
         tile::{TileSpawnEvent, TILE_ID, TILE_SIZE},
     },
     bevy::prelude::*,
@@ -119,9 +118,9 @@ fn generate_sector_layout() -> SectorLayout {
 fn generate_level_layout(In(sector_layout): In<SectorLayout>) -> LevelLayout {
     let mut level_layout = LevelLayout::default();
 
-    for y in 0..SECTOR_ROWS {
-        for x in 0..SECTOR_COLS {
-            let sector_type = &sector_layout[y][x];
+    for r in 0..SECTOR_ROWS {
+        for c in 0..SECTOR_COLS {
+            let sector_type = &sector_layout[r][c];
             let mut sector_contents = [[BG_ID; SECTOR_SIZE.x as usize]; SECTOR_SIZE.y as usize];
             sector_contents[0] = [TILE_ID; SECTOR_SIZE.x as usize];
             sector_contents[SECTOR_SIZE.y as usize - 1] = [TILE_ID; SECTOR_SIZE.x as usize];
@@ -159,7 +158,15 @@ fn generate_level_layout(In(sector_layout): In<SectorLayout>) -> LevelLayout {
             } else if sector_type.intersects(SectorType::EXIT) {
                 sector_contents[SECTOR_SIZE.y as usize - 2][SECTOR_SIZE.x as usize / 2] = EXIT_ID;
             }
-            level_layout[y][x] = sector_contents;
+
+            for y in 1..SECTOR_SIZE.y as usize - 1 {
+                for x in 1..SECTOR_SIZE.x as usize - 1 {
+                    if sector_contents[y][x] == BG_ID && sector_contents[y + 1][x] == TILE_ID {
+                        sector_contents[y][x] = SPIKE_ID;
+                    }
+                }
+            }
+            level_layout[r][c] = sector_contents;
         }
     }
     level_layout
@@ -171,8 +178,7 @@ pub fn signal_entity_spawns(
     tilemap_qry: Query<&Transform, With<TileStorage>>,
     mut tile_spawn_evw: EventWriter<TileSpawnEvent>,
     mut player_spawn_evw: EventWriter<PlayerSpawnEvent>,
-    // mut skeleton_spawn_evw: EventWriter<SkeletonSpawnEvent>,
-    // mut slime_spawn_evw: EventWriter<SlimeSpawnEvent>,
+    mut spike_spawn_evw: EventWriter<SpikeSpawnEvent>,
 ) {
     let tilemap_xform = tilemap_qry.single();
 
@@ -220,12 +226,9 @@ pub fn signal_entity_spawns(
                                 has_collider: false,
                             });
                         }
-                        // SKELETON_ID => {
-                        //     skeleton_spawn_evw.send(SkeletonSpawnEvent { pos: world_pos });
-                        // }
-                        // SLIME_ID => {
-                        //     slime_spawn_evw.send(SlimeSpawnEvent { pos: world_pos });
-                        // }
+                        SPIKE_ID => {
+                            spike_spawn_evw.send(SpikeSpawnEvent { pos: world_pos });
+                        }
                         _ => (),
                     }
                 }
