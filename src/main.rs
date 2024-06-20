@@ -11,7 +11,7 @@ use {
     bevy::{
         //diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
         prelude::*,
-        window::{PresentMode, WindowMode, WindowResolution},
+        window::{PresentMode, WindowMode},
     },
     bevy_ecs_tilemap::prelude::*,
     bevy_framepace::{FramepacePlugin, FramepaceSettings, Limiter},
@@ -21,8 +21,13 @@ use {
     game_state::GameState,
     leafwing_input_manager::prelude::*,
     player::PlayerAction,
+    static_assertions::const_assert,
     tile::TILE_SIZE,
 };
+
+const RESOLUTION: Vec2 = Vec2::new(1280., 720.);
+
+const_assert!(RESOLUTION.x / RESOLUTION.y == 16. / 9.);
 
 fn main() {
     App::new()
@@ -42,7 +47,7 @@ fn main() {
                         present_mode: PresentMode::AutoNoVsync,
                         mode: WindowMode::Windowed,
                         position: WindowPosition::Centered(MonitorSelection::Primary),
-                        resolution: WindowResolution::new(1280., 720.),
+                        resolution: RESOLUTION.into(),
                         title: String::from("Hardcore"),
                         resizable: false,
                         ..default()
