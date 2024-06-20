@@ -64,7 +64,7 @@ impl LevelData {
 
 impl Default for LevelData {
     fn default() -> Self {
-        Self { world: 4, level: 1 }
+        Self { world: 1, level: 1 }
     }
 }
 
