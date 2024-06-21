@@ -15,6 +15,7 @@ use {
 
 const BG_ID: u8 = 0;
 const EXIT_ID: u8 = u8::MAX;
+const PATH_ID: u8 = 69;
 const SECTOR_COLS: usize = 4;
 const SECTOR_ROWS: usize = 4;
 const SECTOR_SIZE: Vec2 = Vec2::new(8., 8.);
@@ -130,38 +131,59 @@ fn generate_level_layout(In(sector_layout): In<SectorLayout>) -> LevelLayout {
             }
 
             if sector_type.intersects(SectorType::OPEN_UP) {
-                sector_contents[0] = [BG_ID; SECTOR_SIZE.x as usize];
-                sector_contents[0][0] = TILE_ID;
-                sector_contents[0][SECTOR_SIZE.x as usize - 1] = TILE_ID;
+                for i in 0..=SECTOR_SIZE.y as usize / 2 {
+                    sector_contents[i][SECTOR_SIZE.x as usize / 2] = PATH_ID;
+                }
             }
             if sector_type.intersects(SectorType::OPEN_DOWN) {
-                sector_contents[SECTOR_SIZE.y as usize - 1] = [BG_ID; SECTOR_SIZE.x as usize];
-                sector_contents[SECTOR_SIZE.y as usize - 1][0] = TILE_ID;
-                sector_contents[SECTOR_SIZE.y as usize - 1][SECTOR_SIZE.x as usize - 1] = TILE_ID;
+                for i in SECTOR_SIZE.y as usize / 2..SECTOR_SIZE.y as usize {
+                    sector_contents[i][SECTOR_SIZE.x as usize / 2] = PATH_ID;
+                }
             }
             if sector_type.intersects(SectorType::OPEN_LEFT) {
-                for i in 1..SECTOR_SIZE.y as usize - 1 {
-                    sector_contents[i][0] = BG_ID;
+                for i in 0..=SECTOR_SIZE.x as usize / 2 {
+                    sector_contents[SECTOR_SIZE.y as usize / 2][i] = PATH_ID;
                 }
             }
             if sector_type.intersects(SectorType::OPEN_RIGHT) {
-                for i in 1..SECTOR_SIZE.y as usize - 1 {
-                    sector_contents[i][SECTOR_SIZE.x as usize - 1] = BG_ID;
+                for i in SECTOR_SIZE.x as usize / 2..SECTOR_SIZE.x as usize {
+                    sector_contents[SECTOR_SIZE.y as usize / 2][i] = PATH_ID;
                 }
             }
             if sector_type.intersects(SectorType::ENTRANCE) {
-                sector_contents[SECTOR_SIZE.y as usize - 2][SECTOR_SIZE.x as usize / 2] = PLAYER_ID;
-                if sector_type.intersects(SectorType::OPEN_DOWN) {
-                    sector_contents[SECTOR_SIZE.y as usize - 1][SECTOR_SIZE.x as usize / 2] =
-                        TILE_ID;
-                }
+                sector_contents[SECTOR_SIZE.y as usize / 2][SECTOR_SIZE.x as usize / 2] = PLAYER_ID;
             } else if sector_type.intersects(SectorType::EXIT) {
-                sector_contents[SECTOR_SIZE.y as usize - 2][SECTOR_SIZE.x as usize / 2] = EXIT_ID;
+                sector_contents[SECTOR_SIZE.y as usize / 2][SECTOR_SIZE.x as usize / 2] = EXIT_ID;
             }
 
+            // STILL IN TEST PHASE
             for y in 1..SECTOR_SIZE.y as usize - 1 {
                 for x in 1..SECTOR_SIZE.x as usize - 1 {
-                    if sector_contents[y][x] == BG_ID && sector_contents[y + 1][x] == TILE_ID {
+                    if sector_contents[y][x] == BG_ID
+                        && [
+                            sector_contents[y - 1][x - 1],
+                            sector_contents[y - 1][x],
+                            sector_contents[y - 1][x + 1],
+                            sector_contents[y][x - 1],
+                            sector_contents[y][x + 1],
+                            sector_contents[y + 1][x - 1],
+                            sector_contents[y + 1][x],
+                            sector_contents[y + 1][x + 1],
+                        ]
+                        .into_iter()
+                        .any(|neighbor| neighbor == TILE_ID)
+                        && rand::thread_rng().gen_ratio(1, 3)
+                    {
+                        sector_contents[y][x] = TILE_ID;
+                    }
+                }
+            }
+            for y in 1..SECTOR_SIZE.y as usize - 1 {
+                for x in 1..SECTOR_SIZE.x as usize - 1 {
+                    if sector_contents[y][x] == BG_ID
+                        && sector_contents[y + 1][x] == TILE_ID
+                        && rand::thread_rng().gen_ratio(1, 4)
+                    {
                         sector_contents[y][x] = SPIKE_ID;
                     }
                 }
@@ -186,7 +208,6 @@ pub fn signal_entity_spawns(
         for c in 0..SECTOR_COLS {
             for y in 0..SECTOR_SIZE.y as usize {
                 for x in 0..SECTOR_SIZE.x as usize {
-                    let entity_type = level_layout[r][c][y][x];
                     let tile_pos = TilePos::new(
                         (x + c * SECTOR_SIZE.x as usize) as u32,
                         LEVEL_SIZE.y as u32 - (y + r * SECTOR_SIZE.y as usize) as u32 - 1,
@@ -200,7 +221,7 @@ pub fn signal_entity_spawns(
                     .translation
                     .truncate();
 
-                    match entity_type {
+                    match level_layout[r][c][y][x] {
                         TILE_ID => {
                             tile_spawn_evw.send(TileSpawnEvent {
                                 tile_pos,
