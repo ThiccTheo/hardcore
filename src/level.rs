@@ -11,7 +11,7 @@ use {
     rand::Rng,
     static_assertions::const_assert,
     std::cmp::Ordering,
-};
+};d
 
 const BG_ID: u8 = 0;
 const EXIT_ID: u8 = u8::MAX;
