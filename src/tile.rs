@@ -18,11 +18,33 @@ pub struct TileSpawnEvent {
     pub is_door: bool,
 }
 
-fn on_tile_spawn(
-    mut tile_spawn_evr: EventReader<TileSpawnEvent>,
+#[derive(Resource)]
+pub struct TileAssets {
+    pub tex: Handle<Image>,
+    pub layout: Handle<TextureAtlasLayout>,
+}
+
+fn load_tile_assets(
     mut cmds: Commands,
     asset_server: Res<AssetServer>,
     mut tex_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
+) {
+    cmds.insert_resource(TileAssets {
+        tex: asset_server.load("tile.png"),
+        layout: tex_atlas_layouts.add(TextureAtlasLayout::from_grid(
+            Vec2::splat(128.),
+            14,
+            7,
+            None,
+            None,
+        )),
+    });
+}
+
+fn on_tile_spawn(
+    mut tile_spawn_evr: EventReader<TileSpawnEvent>,
+    mut cmds: Commands,
+    tile_assets: Res<TileAssets>,
 ) {
     for &TileSpawnEvent {
         pos,
@@ -34,15 +56,9 @@ fn on_tile_spawn(
         let tile_id = cmds
             .spawn(SpriteSheetBundle {
                 transform: Transform::from_translation(pos.extend(TILE_Z)),
-                texture: asset_server.load("tile.png"),
+                texture: tile_assets.tex.clone_weak(),
                 atlas: TextureAtlas {
-                    layout: tex_atlas_layouts.add(TextureAtlasLayout::from_grid(
-                        Vec2::splat(128.),
-                        14,
-                        7,
-                        None,
-                        None,
-                    )),
+                    layout: tile_assets.layout.clone_weak(),
                     index: tex_idx,
                 },
                 ..default()
@@ -78,8 +94,10 @@ fn on_tile_spawn(
 }
 
 pub fn tile_plugin(app: &mut App) {
-    app.add_event::<TileSpawnEvent>().add_systems(
-        OnEnter(GameState::Playing),
-        (on_tile_spawn.after(level::signal_entity_spawns),).chain(),
-    );
+    app.add_event::<TileSpawnEvent>()
+        .add_systems(Startup, load_tile_assets)
+        .add_systems(
+            OnEnter(GameState::Playing),
+            (on_tile_spawn.after(level::signal_entity_spawns),).chain(),
+        );
 }

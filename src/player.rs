@@ -49,11 +49,33 @@ pub struct PlayerSpawnEvent {
     pub pos: Vec2,
 }
 
-fn on_player_spawn(
-    mut player_spawn_evr: EventReader<PlayerSpawnEvent>,
+#[derive(Resource)]
+struct PlayerAssets {
+    tex: Handle<Image>,
+    layout: Handle<TextureAtlasLayout>,
+}
+
+fn load_player_assets(
     mut cmds: Commands,
     asset_server: Res<AssetServer>,
     mut tex_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
+) {
+    cmds.insert_resource(PlayerAssets {
+        tex: asset_server.load("player.png"),
+        layout: tex_atlas_layouts.add(TextureAtlasLayout::from_grid(
+            Vec2::new(80., 110.),
+            9,
+            3,
+            None,
+            None,
+        )),
+    });
+}
+
+fn on_player_spawn(
+    mut player_spawn_evr: EventReader<PlayerSpawnEvent>,
+    mut cmds: Commands,
+    player_assets: Res<PlayerAssets>,
 ) {
     cmds.spawn((
         (
@@ -63,15 +85,9 @@ fn on_player_spawn(
             Flippable::default(),
         ),
         SpriteSheetBundle {
-            texture: asset_server.load("player.png"),
+            texture: player_assets.tex.clone_weak(),
             atlas: TextureAtlas {
-                layout: tex_atlas_layouts.add(TextureAtlasLayout::from_grid(
-                    Vec2::new(80., 110.),
-                    9,
-                    3,
-                    None,
-                    None,
-                )),
+                layout: player_assets.layout.clone_weak(),
                 index: 0,
             },
             transform: Transform::from_translation(
@@ -237,6 +253,7 @@ fn player_animation(
 
 pub fn player_plugin(app: &mut App) {
     app.add_event::<PlayerSpawnEvent>()
+        .add_systems(Startup, load_player_assets)
         .add_systems(
             OnEnter(GameState::Playing),
             on_player_spawn.after(level::signal_entity_spawns),

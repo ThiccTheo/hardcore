@@ -1,5 +1,5 @@
 use {
-    super::{game_state::GameState, level},
+    super::{game_state::GameState, level, tile::TileAssets},
     bevy::prelude::*,
 };
 
@@ -14,21 +14,14 @@ pub struct SpikeSpawnEvent {
 fn on_spike_spawn(
     mut spike_spawn_evr: EventReader<SpikeSpawnEvent>,
     mut cmds: Commands,
-    asset_server: Res<AssetServer>,
-    mut tex_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
+    tile_assets: Res<TileAssets>,
 ) {
     for &SpikeSpawnEvent { pos } in spike_spawn_evr.read() {
         cmds.spawn(SpriteSheetBundle {
             transform: Transform::from_translation(pos.extend(SPIKE_Z)),
-            texture: asset_server.load("tile.png"),
+            texture: tile_assets.tex.clone_weak(),
             atlas: TextureAtlas {
-                layout: tex_atlas_layouts.add(TextureAtlasLayout::from_grid(
-                    Vec2::splat(128.),
-                    14,
-                    7,
-                    None,
-                    None,
-                )),
+                layout: tile_assets.layout.clone_weak(),
                 index: 70,
             },
             ..default()
