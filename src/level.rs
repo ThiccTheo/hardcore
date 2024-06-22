@@ -130,21 +130,33 @@ fn generate_level_layout(In(sector_layout): In<SectorLayout>) -> LevelLayout {
             }
 
             if sector_type.intersects(SectorType::OPEN_UP) {
+                // sector_contents[0] = [BG_ID; SECTOR_SIZE.x as usize];
+                // sector_contents[0][0] = TILE_ID;
+                // sector_contents[0][SECTOR_SIZE.x as usize - 1] = TILE_ID;
                 for i in 0..=SECTOR_SIZE.y as usize / 2 {
                     sector_contents[i][SECTOR_SIZE.x as usize / 2] = PATH_ID;
                 }
             }
             if sector_type.intersects(SectorType::OPEN_DOWN) {
+                // sector_contents[SECTOR_SIZE.y as usize - 1] = [BG_ID; SECTOR_SIZE.x as usize];
+                // sector_contents[SECTOR_SIZE.y as usize - 1][0] = TILE_ID;
+                // sector_contents[SECTOR_SIZE.y as usize - 1][SECTOR_SIZE.x as usize - 1] = TILE_ID;
                 for i in SECTOR_SIZE.y as usize / 2..SECTOR_SIZE.y as usize {
                     sector_contents[i][SECTOR_SIZE.x as usize / 2] = PATH_ID;
                 }
             }
             if sector_type.intersects(SectorType::OPEN_LEFT) {
+                // for i in 1..SECTOR_SIZE.y as usize - 1 {
+                //     sector_contents[i][0] = BG_ID;
+                // }
                 for i in 0..=SECTOR_SIZE.x as usize / 2 {
                     sector_contents[SECTOR_SIZE.y as usize / 2][i] = PATH_ID;
                 }
             }
             if sector_type.intersects(SectorType::OPEN_RIGHT) {
+                // for i in 1..SECTOR_SIZE.y as usize - 1 {
+                //     sector_contents[i][SECTOR_SIZE.x as usize - 1] = BG_ID;
+                // }
                 for i in SECTOR_SIZE.x as usize / 2..SECTOR_SIZE.x as usize {
                     sector_contents[SECTOR_SIZE.y as usize / 2][i] = PATH_ID;
                 }
@@ -177,8 +189,8 @@ fn generate_level_layout(In(sector_layout): In<SectorLayout>) -> LevelLayout {
                     }
                 }
             }
-            for y in 1..SECTOR_SIZE.y as usize - 1 {
-                for x in 1..SECTOR_SIZE.x as usize - 1 {
+            for y in 0..SECTOR_SIZE.y as usize - 1 {
+                for x in 0..SECTOR_SIZE.x as usize {
                     if sector_contents[y][x] == BG_ID
                         && sector_contents[y + 1][x] == TILE_ID
                         && rand::thread_rng().gen_ratio(1, 4)
@@ -223,6 +235,7 @@ pub fn signal_entity_spawns(
                                 pos,
                                 tex_idx: 5 + level_data.world as usize,
                                 has_collider: true,
+                                is_door: false,
                             });
                         }
                         PLAYER_ID => {
@@ -231,6 +244,7 @@ pub fn signal_entity_spawns(
                                 pos,
                                 tex_idx: 75 + level_data.world as usize,
                                 has_collider: false,
+                                is_door: true,
                             });
                         }
                         EXIT_ID => {
@@ -238,6 +252,7 @@ pub fn signal_entity_spawns(
                                 pos,
                                 tex_idx: 75,
                                 has_collider: false,
+                                is_door: true,
                             });
                         }
                         SPIKE_ID => {

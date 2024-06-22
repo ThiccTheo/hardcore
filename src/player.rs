@@ -9,8 +9,11 @@ use {
     bevy::prelude::*,
     bevy_rapier2d::prelude::*,
     bevy_tnua::{
-        builtins::TnuaBuiltinJumpState, control_helpers::TnuaSimpleAirActionsCounter, prelude::*,
-        TnuaAnimatingState, TnuaAnimatingStateDirective, TnuaGhostSensor,
+        builtins::TnuaBuiltinJumpState,
+        control_helpers::{TnuaSimpleAirActionsCounter, TnuaSimpleFallThroughPlatformsHelper},
+        prelude::*,
+        TnuaAnimatingState, TnuaAnimatingStateDirective, TnuaBasis, TnuaGhostSensor,
+        TnuaProximitySensor,
     },
     bevy_tnua_rapier2d::{TnuaRapier2dIOBundle, TnuaRapier2dSensorShape},
     leafwing_input_manager::prelude::*,
@@ -19,6 +22,8 @@ use {
 
 const PLAYER_Z: f32 = 4.;
 pub const PLAYER_ID: u8 = PLAYER_Z as u8;
+const PLAYER_COLLIDER_HALF_HEIGHT: f32 = 16.;
+const PLAYER_COLLDIER_RADIUS: f32 = 16.;
 
 #[derive(Component)]
 pub struct Player;
@@ -28,6 +33,8 @@ pub enum PlayerAction {
     MoveLeft,
     MoveRight,
     Jump,
+    DropDown,
+    EnterDoor,
 }
 
 enum PlayerAnimation {
@@ -49,7 +56,12 @@ fn on_player_spawn(
     mut tex_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
 ) {
     cmds.spawn((
-        Player,
+        (
+            Player,
+            AnimationIndices::default(),
+            AnimationTimer::default(),
+            Flippable::default(),
+        ),
         SpriteSheetBundle {
             texture: asset_server.load("player.png"),
             atlas: TextureAtlas {
@@ -67,23 +79,23 @@ fn on_player_spawn(
             ),
             ..default()
         },
-        Flippable::default(),
         InputManagerBundle::with_map(InputMap::new([
             (PlayerAction::MoveLeft, KeyCode::KeyA),
             (PlayerAction::MoveRight, KeyCode::KeyD),
             (PlayerAction::Jump, KeyCode::Space),
+            (PlayerAction::DropDown, KeyCode::KeyS),
+            (PlayerAction::EnterDoor, KeyCode::KeyW),
         ])),
         RigidBody::Dynamic,
         LockedAxes::ROTATION_LOCKED,
-        Collider::capsule_y(16., 16.),
+        Collider::capsule_y(PLAYER_COLLIDER_HALF_HEIGHT, PLAYER_COLLDIER_RADIUS),
         TnuaRapier2dIOBundle::default(),
         TnuaControllerBundle::default(),
         TnuaSimpleAirActionsCounter::default(),
+        TnuaSimpleFallThroughPlatformsHelper::default(),
         TnuaGhostSensor::default(),
-        TnuaRapier2dSensorShape(Collider::cuboid(14., 0.)),
+        TnuaRapier2dSensorShape(Collider::cuboid(PLAYER_COLLDIER_RADIUS - 2., 0.)),
         TnuaAnimatingState::<PlayerAnimation>::default(),
-        AnimationIndices::default(),
-        AnimationTimer::default(),
     ));
 }
 
@@ -93,16 +105,28 @@ fn player_movement(
         &mut TnuaController,
         &mut TnuaSimpleAirActionsCounter,
         &mut Flippable,
+        &mut TnuaSimpleFallThroughPlatformsHelper,
+        &mut TnuaProximitySensor,
+        &TnuaGhostSensor,
+        &AnimationIndices,
     )>,
 ) {
-    let (player_in, mut player_kcc, mut player_air_actions_count, mut player_flippable) =
-        player_qry.single_mut();
+    let (
+        player_in,
+        mut player_kcc,
+        mut player_air_actions_count,
+        mut player_flippable,
+        mut player_ghost_platforms_helper,
+        mut player_prox_sensor,
+        player_ghost_sensor,
+        player_animation_idxs,
+    ) = player_qry.single_mut();
     player_air_actions_count.update(&player_kcc);
 
     player_kcc.basis(TnuaBuiltinWalk {
         max_slope: FRAC_PI_4,
         spring_dampening: 0.5,
-        float_height: 50.,
+        float_height: PLAYER_COLLIDER_HALF_HEIGHT + PLAYER_COLLDIER_RADIUS + 14.,
         air_acceleration: 2. * TILE_SIZE.x,
         acceleration: 2. * TILE_SIZE.x,
         desired_velocity: 3.
@@ -131,6 +155,20 @@ fn player_movement(
             ..default()
         });
     }
+
+    let mut ghost_platforms_handle = player_ghost_platforms_helper.with(
+        &mut player_prox_sensor,
+        player_ghost_sensor,
+        PLAYER_COLLIDER_HALF_HEIGHT + PLAYER_COLLDIER_RADIUS,
+    );
+
+    if player_in.pressed(&PlayerAction::DropDown) {
+        ghost_platforms_handle.try_falling(true);
+    } else if *player_animation_idxs != (AnimationIndices { first: 1, last: 1 })
+    // should compare against smth else
+    {
+        ghost_platforms_handle.dont_fall();
+    }
 }
 
 fn player_animation(
@@ -147,7 +185,6 @@ fn player_animation(
         mut player_animation_idxs,
         mut player_animation_timer,
     ) = player_qry.single_mut();
-
     match player_animating_state.update_by_discriminant({
         match player_kcc.action_name() {
             Some(TnuaBuiltinJump::NAME) => {

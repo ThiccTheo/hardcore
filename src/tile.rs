@@ -2,17 +2,20 @@ use {
     super::{game_state::GameState, level},
     bevy::prelude::*,
     bevy_rapier2d::prelude::*,
+    bevy_tnua::TnuaGhostPlatform,
 };
 
 const TILE_Z: f32 = 1.;
 pub const TILE_ID: u8 = TILE_Z as u8;
 pub const TILE_SIZE: Vec2 = Vec2::splat(128.);
+const DOOR_PLATFORM_SIZE: Vec2 = Vec2::new(TILE_SIZE.x, TILE_SIZE.y / 6.);
 
 #[derive(Event)]
 pub struct TileSpawnEvent {
     pub pos: Vec2,
     pub tex_idx: usize,
     pub has_collider: bool,
+    pub is_door: bool,
 }
 
 fn on_tile_spawn(
@@ -25,6 +28,7 @@ fn on_tile_spawn(
         pos,
         tex_idx,
         has_collider,
+        is_door,
     } in tile_spawn_evr.read()
     {
         let tile_id = cmds
@@ -48,6 +52,27 @@ fn on_tile_spawn(
         if has_collider {
             cmds.entity(tile_id)
                 .insert(Collider::cuboid(TILE_SIZE.x / 2., TILE_SIZE.y / 2.));
+        }
+        if is_door {
+            cmds.spawn((
+                TnuaGhostPlatform,
+                Collider::cuboid(DOOR_PLATFORM_SIZE.x / 2., DOOR_PLATFORM_SIZE.y / 2.),
+                SpriteSheetBundle {
+                    sprite: Sprite {
+                        custom_size: Some(DOOR_PLATFORM_SIZE),
+                        ..default()
+                    },
+                    transform: Transform::from_translation(
+                        (pos - Vec2::Y * (TILE_SIZE.y / 2. + DOOR_PLATFORM_SIZE.y / 2.))
+                            .extend(TILE_Z - 0.5),
+                    ),
+                    ..default()
+                },
+                SolverGroups {
+                    memberships: Group::empty(),
+                    filters: Group::empty(),
+                },
+            ));
         }
     }
 }
