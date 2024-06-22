@@ -6,7 +6,6 @@ use {
         tile::{TileSpawnEvent, TILE_ID, TILE_SIZE},
     },
     bevy::prelude::*,
-    bevy_ecs_tilemap::prelude::*,
     bitflags::bitflags,
     rand::Rng,
     static_assertions::const_assert,
@@ -197,58 +196,52 @@ fn generate_level_layout(In(sector_layout): In<SectorLayout>) -> LevelLayout {
 pub fn signal_entity_spawns(
     In(level_layout): In<LevelLayout>,
     level_data: Res<LevelData>,
-    tilemap_qry: Query<&Transform, With<TileStorage>>,
     mut tile_spawn_evw: EventWriter<TileSpawnEvent>,
     mut player_spawn_evw: EventWriter<PlayerSpawnEvent>,
     mut spike_spawn_evw: EventWriter<SpikeSpawnEvent>,
 ) {
-    let tilemap_xform = tilemap_qry.single();
-
     for r in 0..SECTOR_ROWS {
         for c in 0..SECTOR_COLS {
             for y in 0..SECTOR_SIZE.y as usize {
                 for x in 0..SECTOR_SIZE.x as usize {
-                    let tile_pos = TilePos::new(
-                        (x + c * SECTOR_SIZE.x as usize) as u32,
-                        LEVEL_SIZE.y as u32 - (y + r * SECTOR_SIZE.y as usize) as u32 - 1,
-                    );
-                    let world_pos = (*tilemap_xform
-                        * Transform::from_translation(
-                            tile_pos
-                                .center_in_world(&TILE_SIZE.into(), &TilemapType::Square)
-                                .extend(default()),
-                        ))
+                    let pos = (Transform::from_translation(
+                        (-Vec2::new(LEVEL_SIZE.x - 1., LEVEL_SIZE.y - 1.) * TILE_SIZE / 2.)
+                            .extend(default()),
+                    ) * Transform::from_translation(
+                        (Vec2::new(
+                            (x + c * SECTOR_SIZE.x as usize) as f32,
+                            LEVEL_SIZE.y - (y + r * SECTOR_SIZE.y as usize) as f32 - 1.,
+                        ) * TILE_SIZE)
+                            .extend(default()),
+                    ))
                     .translation
                     .truncate();
 
                     match level_layout[r][c][y][x] {
                         TILE_ID => {
                             tile_spawn_evw.send(TileSpawnEvent {
-                                tile_pos,
-                                world_pos,
-                                tex_idx: TileTextureIndex(5 + level_data.world as u32),
+                                pos,
+                                tex_idx: 5 + level_data.world as usize,
                                 has_collider: true,
                             });
                         }
                         PLAYER_ID => {
-                            player_spawn_evw.send(PlayerSpawnEvent { pos: world_pos });
+                            player_spawn_evw.send(PlayerSpawnEvent { pos });
                             tile_spawn_evw.send(TileSpawnEvent {
-                                tile_pos,
-                                world_pos,
-                                tex_idx: TileTextureIndex(75 + level_data.world as u32),
+                                pos,
+                                tex_idx: 75 + level_data.world as usize,
                                 has_collider: false,
                             });
                         }
                         EXIT_ID => {
                             tile_spawn_evw.send(TileSpawnEvent {
-                                tile_pos,
-                                world_pos,
-                                tex_idx: TileTextureIndex(75),
+                                pos,
+                                tex_idx: 75,
                                 has_collider: false,
                             });
                         }
                         SPIKE_ID => {
-                            spike_spawn_evw.send(SpikeSpawnEvent { pos: world_pos });
+                            spike_spawn_evw.send(SpikeSpawnEvent { pos });
                         }
                         _ => (),
                     }

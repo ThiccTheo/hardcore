@@ -14,7 +14,6 @@ use {
         prelude::*,
         window::{PresentMode, WindowMode},
     },
-    bevy_ecs_tilemap::prelude::*,
     bevy_framepace::{FramepacePlugin, FramepaceSettings, Limiter},
     bevy_rapier2d::prelude::*,
     bevy_tnua::prelude::*,
@@ -61,10 +60,9 @@ fn main() {
                 InputManagerPlugin::<PlayerAction>::default(),
                 RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(TILE_SIZE.x)
                     .in_fixed_schedule(),
-                RapierDebugRenderPlugin::default(),
+                //RapierDebugRenderPlugin::default(),
                 TnuaRapier2dPlugin::new(FixedUpdate),
                 TnuaControllerPlugin::new(FixedUpdate),
-                TilemapPlugin,
             ),
             (
                 main_camera::main_camera_plugin,
