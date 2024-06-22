@@ -75,10 +75,11 @@ fn main() {
                 spike::spike_plugin,
             ),
         ))
-        .add_systems(PostStartup, cap_fps)
+        .add_systems(
+            PostStartup,
+            |mut fps_settings: ResMut<FramepaceSettings>| {
+                fps_settings.limiter = Limiter::from_framerate(500.)
+            },
+        )
         .run();
-}
-
-fn cap_fps(mut fps_settings: ResMut<FramepaceSettings>) {
-    fps_settings.limiter = Limiter::from_framerate(500.);
 }

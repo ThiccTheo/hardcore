@@ -6,10 +6,6 @@ use {
 #[derive(Component)]
 pub struct MainCamera;
 
-fn spawn_main_camera(mut cmds: Commands) {
-    cmds.spawn((MainCamera, Camera2dBundle::default()));
-}
-
 fn follow_player(
     mut cam_qry: Query<&mut Transform, (With<MainCamera>, Without<Player>)>,
     player_qry: Query<&Transform, (With<Player>, Without<MainCamera>)>,
@@ -86,7 +82,9 @@ fn adjust_camera_zoom(
 
 pub fn main_camera_plugin(app: &mut App) {
     app.insert_resource(ClearColor(Color::rgb_u8(208, 187, 148)))
-        .add_systems(Startup, spawn_main_camera)
+        .add_systems(Startup, |mut cmds: Commands| {
+            cmds.spawn((MainCamera, Camera2dBundle::default()));
+        })
         .add_systems(
             Update,
             (adjust_camera_zoom, clamp_camera_to_tilemap)

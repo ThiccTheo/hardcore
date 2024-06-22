@@ -1,6 +1,6 @@
 use {
     super::{
-        animation::{self, AnimationIndices, AnimationTimer},
+        animation::{self, AnimationContext, AnimationIndices, AnimationTimer},
         game_state::GameState,
         level,
         sprite_flip::Flippable,
@@ -12,11 +12,11 @@ use {
         builtins::TnuaBuiltinJumpState,
         control_helpers::{TnuaSimpleAirActionsCounter, TnuaSimpleFallThroughPlatformsHelper},
         prelude::*,
-        TnuaAnimatingState, TnuaAnimatingStateDirective, TnuaBasis, TnuaGhostSensor,
-        TnuaProximitySensor,
+        TnuaAnimatingState, TnuaAnimatingStateDirective, TnuaGhostSensor, TnuaProximitySensor,
     },
     bevy_tnua_rapier2d::{TnuaRapier2dIOBundle, TnuaRapier2dSensorShape},
     leafwing_input_manager::prelude::*,
+    maplit::hashmap,
     std::{f32::consts::FRAC_PI_4, time::Duration},
 };
 
@@ -37,6 +37,7 @@ pub enum PlayerAction {
     EnterDoor,
 }
 
+#[derive(Hash, Eq, PartialEq)]
 enum PlayerAnimation {
     Idling,
     Running,
@@ -53,23 +54,6 @@ pub struct PlayerSpawnEvent {
 struct PlayerAssets {
     tex: Handle<Image>,
     layout: Handle<TextureAtlasLayout>,
-}
-
-fn load_player_assets(
-    mut cmds: Commands,
-    asset_server: Res<AssetServer>,
-    mut tex_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
-) {
-    cmds.insert_resource(PlayerAssets {
-        tex: asset_server.load("player.png"),
-        layout: tex_atlas_layouts.add(TextureAtlasLayout::from_grid(
-            Vec2::new(80., 110.),
-            9,
-            3,
-            None,
-            None,
-        )),
-    });
 }
 
 fn on_player_spawn(
@@ -126,6 +110,7 @@ fn player_movement(
         &TnuaGhostSensor,
         &AnimationIndices,
     )>,
+    player_animation_ctx: Res<AnimationContext<PlayerAnimation>>,
 ) {
     let (
         player_in,
@@ -180,8 +165,11 @@ fn player_movement(
 
     if player_in.pressed(&PlayerAction::DropDown) {
         ghost_platforms_handle.try_falling(true);
-    } else if *player_animation_idxs != (AnimationIndices { first: 1, last: 1 })
-    // should compare against smth else
+    } else if *player_animation_idxs
+        != player_animation_ctx
+            .get(&PlayerAnimation::Jumping)
+            .unwrap()
+            .0
     {
         ghost_platforms_handle.dont_fall();
     }
@@ -194,6 +182,7 @@ fn player_animation(
         &mut AnimationIndices,
         &mut AnimationTimer,
     )>,
+    player_animation_ctx: Res<AnimationContext<PlayerAnimation>>,
 ) {
     let (
         mut player_animating_state,
@@ -229,31 +218,49 @@ fn player_animation(
     }) {
         TnuaAnimatingStateDirective::Maintain { .. } => (),
         TnuaAnimatingStateDirective::Alter { state, .. } => {
-            (*player_animation_idxs, *player_animation_timer) = match state {
-                PlayerAnimation::Idling => (
-                    AnimationIndices { first: 0, last: 0 },
-                    AnimationTimer::new(Duration::from_secs_f32(0.)),
-                ),
-                PlayerAnimation::Running => (
-                    AnimationIndices { first: 9, last: 10 },
-                    AnimationTimer::new(Duration::from_secs_f32(3f32.recip())),
-                ),
-                PlayerAnimation::Jumping => (
-                    AnimationIndices { first: 1, last: 1 },
-                    AnimationTimer::new(Duration::from_secs_f32(0.)),
-                ),
-                PlayerAnimation::Falling => (
-                    AnimationIndices { first: 2, last: 2 },
-                    AnimationTimer::new(Duration::from_secs_f32(0.)),
-                ),
-            }
+            (*player_animation_idxs, *player_animation_timer) =
+                player_animation_ctx.get(state).unwrap().clone()
         }
     }
 }
 
 pub fn player_plugin(app: &mut App) {
     app.add_event::<PlayerSpawnEvent>()
-        .add_systems(Startup, load_player_assets)
+        .insert_resource(AnimationContext::<PlayerAnimation>(hashmap! {
+            PlayerAnimation::Idling => (
+                AnimationIndices { first: 0, last: 0 },
+                AnimationTimer::new(Duration::from_secs_f32(0.)),
+            ),
+            PlayerAnimation::Running => (
+                AnimationIndices { first: 9, last: 10 },
+                AnimationTimer::new(Duration::from_secs_f32(3f32.recip())),
+            ),
+            PlayerAnimation::Jumping => (
+                AnimationIndices { first: 1, last: 1 },
+                AnimationTimer::new(Duration::from_secs_f32(0.)),
+            ),
+            PlayerAnimation::Falling => (
+                AnimationIndices { first: 2, last: 2 },
+                AnimationTimer::new(Duration::from_secs_f32(0.)),
+            )
+        }))
+        .add_systems(
+            Startup,
+            |mut cmds: Commands,
+             asset_server: Res<AssetServer>,
+             mut tex_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>| {
+                cmds.insert_resource(PlayerAssets {
+                    tex: asset_server.load("player.png"),
+                    layout: tex_atlas_layouts.add(TextureAtlasLayout::from_grid(
+                        Vec2::new(80., 110.),
+                        9,
+                        3,
+                        None,
+                        None,
+                    )),
+                });
+            },
+        )
         .add_systems(
             OnEnter(GameState::Playing),
             on_player_spawn.after(level::signal_entity_spawns),

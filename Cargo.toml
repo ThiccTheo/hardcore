@@ -11,6 +11,7 @@ bevy_framepace = "0.16.0"
 bevy_rapier2d = "0.26.0"
 bitflags = "2.5.0"
 leafwing-input-manager = "0.13.3"
+maplit = "1.0.2"
 rand = "0.8.5"
 static_assertions = "1.1.0"
 

@@ -1,4 +1,7 @@
-use {bevy::prelude::*, std::time::Duration};
+use {
+    bevy::prelude::*,
+    std::{collections::HashMap, time::Duration},
+};
 
 #[derive(Component, PartialEq, Default, Clone)]
 pub struct AnimationIndices {
@@ -6,8 +9,11 @@ pub struct AnimationIndices {
     pub last: usize,
 }
 
-#[derive(Component, Deref, DerefMut, Default)]
+#[derive(Component, Deref, DerefMut, Default, Clone)]
 pub struct AnimationTimer(Timer);
+
+#[derive(Resource, Deref, DerefMut)]
+pub struct AnimationContext<T>(pub HashMap<T, (AnimationIndices, AnimationTimer)>);
 
 impl AnimationTimer {
     pub fn new(duration: Duration) -> Self {

@@ -24,23 +24,6 @@ pub struct TileAssets {
     pub layout: Handle<TextureAtlasLayout>,
 }
 
-fn load_tile_assets(
-    mut cmds: Commands,
-    asset_server: Res<AssetServer>,
-    mut tex_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
-) {
-    cmds.insert_resource(TileAssets {
-        tex: asset_server.load("tile.png"),
-        layout: tex_atlas_layouts.add(TextureAtlasLayout::from_grid(
-            Vec2::splat(128.),
-            14,
-            7,
-            None,
-            None,
-        )),
-    });
-}
-
 fn on_tile_spawn(
     mut tile_spawn_evr: EventReader<TileSpawnEvent>,
     mut cmds: Commands,
@@ -95,7 +78,23 @@ fn on_tile_spawn(
 
 pub fn tile_plugin(app: &mut App) {
     app.add_event::<TileSpawnEvent>()
-        .add_systems(Startup, load_tile_assets)
+        .add_systems(
+            Startup,
+            |mut cmds: Commands,
+             asset_server: Res<AssetServer>,
+             mut tex_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>| {
+                cmds.insert_resource(TileAssets {
+                    tex: asset_server.load("tile.png"),
+                    layout: tex_atlas_layouts.add(TextureAtlasLayout::from_grid(
+                        Vec2::splat(128.),
+                        14,
+                        7,
+                        None,
+                        None,
+                    )),
+                });
+            },
+        )
         .add_systems(
             OnEnter(GameState::Playing),
             (on_tile_spawn.after(level::signal_entity_spawns),).chain(),
