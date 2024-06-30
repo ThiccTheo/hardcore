@@ -1,9 +1,9 @@
 use {
     super::{
         game_state::GameState,
-        player::{PlayerSpawnEvent, PLAYER_ID},
-        spike::{SpikeSpawnEvent, SPIKE_ID},
-        tile::{TileSpawnEvent, TILE_ID, TILE_SIZE},
+        player::PlayerSpawnEvent,
+        spike::SpikeSpawnEvent,
+        tile::{TileSpawnEvent, TILE_SIZE},
     },
     bevy::prelude::*,
     bitflags::bitflags,
@@ -12,11 +12,8 @@ use {
     std::cmp::Ordering,
 };
 
-const BG_ID: u8 = 0;
-const EXIT_ID: u8 = u8::MAX;
-const PATH_ID: u8 = 69;
-const SECTOR_COLS: usize = 4;
-const SECTOR_ROWS: usize = 4;
+const SECTOR_COLS: usize = 1;
+const SECTOR_ROWS: usize = 8;
 const SECTOR_SIZE: Vec2 = Vec2::new(8., 8.);
 pub const LEVEL_SIZE: Vec2 = Vec2::new(
     SECTOR_SIZE.x * SECTOR_COLS as f32,
@@ -26,10 +23,21 @@ pub const LEVEL_SIZE: Vec2 = Vec2::new(
 const_assert!(SECTOR_COLS >= 1 && SECTOR_ROWS >= 2);
 const_assert!(SECTOR_SIZE.x >= 4. && SECTOR_SIZE.y >= 4.);
 
-type LevelLayout =
-    [[[[u8; SECTOR_SIZE.x as usize]; SECTOR_SIZE.y as usize]; SECTOR_COLS]; SECTOR_ROWS];
+#[derive(Default, Clone, Copy, PartialEq, Eq)]
+pub enum LevelObject {
+    #[default]
+    Background,
+    Entrance,
+    Spike,
+    Tile,
+    Exit,
+    Path,
+}
 
 type SectorLayout = [[SectorType; SECTOR_COLS]; SECTOR_ROWS];
+
+type LevelLayout =
+    [[[[LevelObject; SECTOR_SIZE.x as usize]; SECTOR_SIZE.y as usize]; SECTOR_COLS]; SECTOR_ROWS];
 
 bitflags! {
     #[rustfmt::skip]
@@ -121,56 +129,60 @@ fn generate_level_layout(In(sector_layout): In<SectorLayout>) -> LevelLayout {
     for r in 0..SECTOR_ROWS {
         for c in 0..SECTOR_COLS {
             let sector_type = &sector_layout[r][c];
-            let mut sector_contents = [[BG_ID; SECTOR_SIZE.x as usize]; SECTOR_SIZE.y as usize];
-            sector_contents[0] = [TILE_ID; SECTOR_SIZE.x as usize];
-            sector_contents[SECTOR_SIZE.y as usize - 1] = [TILE_ID; SECTOR_SIZE.x as usize];
+            let mut sector_contents =
+                [[LevelObject::Background; SECTOR_SIZE.x as usize]; SECTOR_SIZE.y as usize];
+            sector_contents[0] = [LevelObject::Tile; SECTOR_SIZE.x as usize];
+            sector_contents[SECTOR_SIZE.y as usize - 1] =
+                [LevelObject::Tile; SECTOR_SIZE.x as usize];
             for i in 1..SECTOR_SIZE.y as usize - 1 {
-                sector_contents[i][0] = TILE_ID;
-                sector_contents[i][SECTOR_SIZE.x as usize - 1] = TILE_ID;
+                sector_contents[i][0] = LevelObject::Tile;
+                sector_contents[i][SECTOR_SIZE.x as usize - 1] = LevelObject::Tile;
             }
 
             if sector_type.intersects(SectorType::OPEN_UP) {
-                // sector_contents[0] = [BG_ID; SECTOR_SIZE.x as usize];
-                // sector_contents[0][0] = TILE_ID;
-                // sector_contents[0][SECTOR_SIZE.x as usize - 1] = TILE_ID;
+                // sector_contents[0] = [LevelObject::Background; SECTOR_SIZE.x as usize];
+                // sector_contents[0][0] = LevelObject::Tile;
+                // sector_contents[0][SECTOR_SIZE.x as usize - 1] = LevelObject::Tile;
                 for i in 0..=SECTOR_SIZE.y as usize / 2 {
-                    sector_contents[i][SECTOR_SIZE.x as usize / 2] = PATH_ID;
+                    sector_contents[i][SECTOR_SIZE.x as usize / 2] = LevelObject::Path;
                 }
             }
             if sector_type.intersects(SectorType::OPEN_DOWN) {
-                // sector_contents[SECTOR_SIZE.y as usize - 1] = [BG_ID; SECTOR_SIZE.x as usize];
-                // sector_contents[SECTOR_SIZE.y as usize - 1][0] = TILE_ID;
-                // sector_contents[SECTOR_SIZE.y as usize - 1][SECTOR_SIZE.x as usize - 1] = TILE_ID;
+                // sector_contents[SECTOR_SIZE.y as usize - 1] = [LevelObject::Background; SECTOR_SIZE.x as usize];
+                // sector_contents[SECTOR_SIZE.y as usize - 1][0] = LevelObject::Tile;
+                // sector_contents[SECTOR_SIZE.y as usize - 1][SECTOR_SIZE.x as usize - 1] = LevelObject::Tile;
                 for i in SECTOR_SIZE.y as usize / 2..SECTOR_SIZE.y as usize {
-                    sector_contents[i][SECTOR_SIZE.x as usize / 2] = PATH_ID;
+                    sector_contents[i][SECTOR_SIZE.x as usize / 2] = LevelObject::Path;
                 }
             }
             if sector_type.intersects(SectorType::OPEN_LEFT) {
                 // for i in 1..SECTOR_SIZE.y as usize - 1 {
-                //     sector_contents[i][0] = BG_ID;
+                //     sector_contents[i][0] = LevelObject::Background;
                 // }
                 for i in 0..=SECTOR_SIZE.x as usize / 2 {
-                    sector_contents[SECTOR_SIZE.y as usize / 2][i] = PATH_ID;
+                    sector_contents[SECTOR_SIZE.y as usize / 2][i] = LevelObject::Path;
                 }
             }
             if sector_type.intersects(SectorType::OPEN_RIGHT) {
                 // for i in 1..SECTOR_SIZE.y as usize - 1 {
-                //     sector_contents[i][SECTOR_SIZE.x as usize - 1] = BG_ID;
+                //     sector_contents[i][SECTOR_SIZE.x as usize - 1] = LevelObject::Background;
                 // }
                 for i in SECTOR_SIZE.x as usize / 2..SECTOR_SIZE.x as usize {
-                    sector_contents[SECTOR_SIZE.y as usize / 2][i] = PATH_ID;
+                    sector_contents[SECTOR_SIZE.y as usize / 2][i] = LevelObject::Path;
                 }
             }
             if sector_type.intersects(SectorType::ENTRANCE) {
-                sector_contents[SECTOR_SIZE.y as usize / 2][SECTOR_SIZE.x as usize / 2] = PLAYER_ID;
+                sector_contents[SECTOR_SIZE.y as usize / 2][SECTOR_SIZE.x as usize / 2] =
+                    LevelObject::Entrance;
             } else if sector_type.intersects(SectorType::EXIT) {
-                sector_contents[SECTOR_SIZE.y as usize / 2][SECTOR_SIZE.x as usize / 2] = EXIT_ID;
+                sector_contents[SECTOR_SIZE.y as usize / 2][SECTOR_SIZE.x as usize / 2] =
+                    LevelObject::Exit;
             }
 
             // STILL IN TEST PHASE
             for y in 1..SECTOR_SIZE.y as usize - 1 {
                 for x in 1..SECTOR_SIZE.x as usize - 1 {
-                    if sector_contents[y][x] == BG_ID
+                    if sector_contents[y][x] == LevelObject::Background
                         && [
                             sector_contents[y - 1][x - 1],
                             sector_contents[y - 1][x],
@@ -182,20 +194,20 @@ fn generate_level_layout(In(sector_layout): In<SectorLayout>) -> LevelLayout {
                             sector_contents[y + 1][x + 1],
                         ]
                         .into_iter()
-                        .any(|neighbor| neighbor == TILE_ID)
+                        .any(|neighbor| neighbor == LevelObject::Tile)
                         && rand::thread_rng().gen_ratio(1, 3)
                     {
-                        sector_contents[y][x] = TILE_ID;
+                        sector_contents[y][x] = LevelObject::Tile;
                     }
                 }
             }
             for y in 0..SECTOR_SIZE.y as usize - 1 {
                 for x in 0..SECTOR_SIZE.x as usize {
-                    if sector_contents[y][x] == BG_ID
-                        && sector_contents[y + 1][x] == TILE_ID
+                    if sector_contents[y][x] == LevelObject::Background
+                        && sector_contents[y + 1][x] == LevelObject::Tile
                         && rand::thread_rng().gen_ratio(1, 4)
                     {
-                        sector_contents[y][x] = SPIKE_ID;
+                        sector_contents[y][x] = LevelObject::Spike;
                     }
                 }
             }
@@ -230,7 +242,7 @@ pub fn signal_entity_spawns(
                     .truncate();
 
                     match level_layout[r][c][y][x] {
-                        TILE_ID => {
+                        LevelObject::Tile => {
                             tile_spawn_evw.send(TileSpawnEvent {
                                 pos,
                                 tex_idx: 5 + level_data.world as usize,
@@ -238,7 +250,7 @@ pub fn signal_entity_spawns(
                                 is_door: false,
                             });
                         }
-                        PLAYER_ID => {
+                        LevelObject::Entrance => {
                             player_spawn_evw.send(PlayerSpawnEvent { pos });
                             tile_spawn_evw.send(TileSpawnEvent {
                                 pos,
@@ -247,7 +259,7 @@ pub fn signal_entity_spawns(
                                 is_door: true,
                             });
                         }
-                        EXIT_ID => {
+                        LevelObject::Exit => {
                             tile_spawn_evw.send(TileSpawnEvent {
                                 pos,
                                 tex_idx: 75,
@@ -255,7 +267,7 @@ pub fn signal_entity_spawns(
                                 is_door: true,
                             });
                         }
-                        SPIKE_ID => {
+                        LevelObject::Spike => {
                             spike_spawn_evw.send(SpikeSpawnEvent { pos });
                         }
                         _ => (),

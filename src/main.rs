@@ -7,6 +7,7 @@ mod player;
 mod spike;
 mod sprite_flip;
 mod tile;
+mod texture_atlas_owner;
 
 use {
     bevy::{

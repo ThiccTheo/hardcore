@@ -1,10 +1,12 @@
 use {
-    super::{game_state::GameState, level, tile::TileAssets},
+    super::{game_state::GameState, level, texture_atlas_owner::TextureAtlasOwner, tile::Tile},
     bevy::prelude::*,
 };
 
 const SPIKE_Z: f32 = 2.;
-pub const SPIKE_ID: u8 = SPIKE_Z as u8;
+
+#[derive(Component)]
+pub struct Spike;
 
 #[derive(Event)]
 pub struct SpikeSpawnEvent {
@@ -14,18 +16,21 @@ pub struct SpikeSpawnEvent {
 fn on_spike_spawn(
     mut spike_spawn_evr: EventReader<SpikeSpawnEvent>,
     mut cmds: Commands,
-    tile_assets: Res<TileAssets>,
+    tile_assets: Res<TextureAtlasOwner<Tile>>,
 ) {
     for &SpikeSpawnEvent { pos } in spike_spawn_evr.read() {
-        cmds.spawn(SpriteSheetBundle {
-            transform: Transform::from_translation(pos.extend(SPIKE_Z)),
-            texture: tile_assets.tex.clone_weak(),
-            atlas: TextureAtlas {
-                layout: tile_assets.layout.clone_weak(),
-                index: 70,
+        cmds.spawn((
+            Spike,
+            SpriteSheetBundle {
+                transform: Transform::from_translation(pos.extend(SPIKE_Z)),
+                texture: tile_assets.tex.clone_weak(),
+                atlas: TextureAtlas {
+                    layout: tile_assets.layout.clone_weak(),
+                    index: 70,
+                },
+                ..default()
             },
-            ..default()
-        });
+        ));
     }
 }
 

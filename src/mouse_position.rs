@@ -3,7 +3,7 @@ use {
     bevy::{prelude::*, window::PrimaryWindow},
 };
 
-#[derive(Resource, Deref, DerefMut, Default)]
+#[derive(Resource, Default, DerefMut, Deref)]
 pub struct MousePosition(pub Vec2);
 
 fn update_mouse_position(
