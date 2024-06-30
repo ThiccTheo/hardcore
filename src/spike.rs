@@ -11,6 +11,7 @@ use {
 };
 
 const SPIKE_Z: f32 = TILE_Z + 1.;
+const SPIKE_COLLIDER_SIZE: Vec2 = Vec2::new(TILE_SIZE.x * 2. / 3., TILE_SIZE.y / 3.);
 
 #[derive(Component)]
 pub struct Spike;
@@ -38,10 +39,19 @@ fn on_spike_spawn(
                 },
                 ..default()
             },
-            Collider::cuboid(TILE_SIZE.x / 2., TILE_SIZE.y / 2.),
-            Sensor,
-            Damage::Kill,
-        ));
+        ))
+        .with_children(|parent| {
+            parent.spawn((
+                Collider::cuboid(SPIKE_COLLIDER_SIZE.x / 2., SPIKE_COLLIDER_SIZE.y / 2.),
+                Sensor,
+                Damage::Kill,
+                SpatialBundle::from_transform(Transform::from_xyz(
+                    0.,
+                    -(TILE_SIZE.y - SPIKE_COLLIDER_SIZE.y) / 2.,
+                    0.,
+                )),
+            ));
+        });
     }
 }
 

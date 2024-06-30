@@ -63,7 +63,7 @@ fn main() {
                 InputManagerPlugin::<PlayerAction>::default(),
                 RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(TILE_SIZE.x)
                     .in_fixed_schedule(),
-                //RapierDebugRenderPlugin::default(),
+                RapierDebugRenderPlugin::default(),
                 TnuaRapier2dPlugin::new(FixedUpdate),
                 TnuaControllerPlugin::new(FixedUpdate),
             ),

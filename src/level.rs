@@ -141,33 +141,21 @@ fn generate_level_layout(In(sector_layout): In<SectorLayout>) -> LevelLayout {
             }
 
             if sector_type.intersects(SectorType::OPEN_UP) {
-                // sector_contents[0] = [LevelObject::Background; SECTOR_SIZE.x as usize];
-                // sector_contents[0][0] = LevelObject::Tile;
-                // sector_contents[0][SECTOR_SIZE.x as usize - 1] = LevelObject::Tile;
                 for i in 0..=SECTOR_SIZE.y as usize / 2 {
                     sector_contents[i][SECTOR_SIZE.x as usize / 2] = LevelObject::Path;
                 }
             }
             if sector_type.intersects(SectorType::OPEN_DOWN) {
-                // sector_contents[SECTOR_SIZE.y as usize - 1] = [LevelObject::Background; SECTOR_SIZE.x as usize];
-                // sector_contents[SECTOR_SIZE.y as usize - 1][0] = LevelObject::Tile;
-                // sector_contents[SECTOR_SIZE.y as usize - 1][SECTOR_SIZE.x as usize - 1] = LevelObject::Tile;
                 for i in SECTOR_SIZE.y as usize / 2..SECTOR_SIZE.y as usize {
                     sector_contents[i][SECTOR_SIZE.x as usize / 2] = LevelObject::Path;
                 }
             }
             if sector_type.intersects(SectorType::OPEN_LEFT) {
-                // for i in 1..SECTOR_SIZE.y as usize - 1 {
-                //     sector_contents[i][0] = LevelObject::Background;
-                // }
                 for i in 0..=SECTOR_SIZE.x as usize / 2 {
                     sector_contents[SECTOR_SIZE.y as usize / 2][i] = LevelObject::Path;
                 }
             }
             if sector_type.intersects(SectorType::OPEN_RIGHT) {
-                // for i in 1..SECTOR_SIZE.y as usize - 1 {
-                //     sector_contents[i][SECTOR_SIZE.x as usize - 1] = LevelObject::Background;
-                // }
                 for i in SECTOR_SIZE.x as usize / 2..SECTOR_SIZE.x as usize {
                     sector_contents[SECTOR_SIZE.y as usize / 2][i] = LevelObject::Path;
                 }
@@ -196,7 +184,7 @@ fn generate_level_layout(In(sector_layout): In<SectorLayout>) -> LevelLayout {
                         ]
                         .into_iter()
                         .any(|neighbor| neighbor == LevelObject::Tile)
-                        && rand::thread_rng().gen_ratio(1, 3)
+                        && rand::thread_rng().gen_ratio(1, 2)
                     {
                         sector_contents[y][x] = LevelObject::Tile;
                     }
