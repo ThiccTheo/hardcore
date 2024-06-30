@@ -1,14 +1,16 @@
 use {
     super::{
+        combat::Damage,
         game_state::{GameState, PlayingEntity},
         level,
         texture_atlas_owner::TextureAtlasOwner,
-        tile::Tile,
+        tile::{Tile, TILE_SIZE, TILE_Z},
     },
     bevy::prelude::*,
+    bevy_rapier2d::prelude::*,
 };
 
-const SPIKE_Z: f32 = 2.;
+const SPIKE_Z: f32 = TILE_Z + 1.;
 
 #[derive(Component)]
 pub struct Spike;
@@ -36,6 +38,9 @@ fn on_spike_spawn(
                 },
                 ..default()
             },
+            Collider::cuboid(TILE_SIZE.x / 2., TILE_SIZE.y / 2.),
+            Sensor,
+            Damage::Kill,
         ));
     }
 }

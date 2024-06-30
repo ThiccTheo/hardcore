@@ -64,6 +64,7 @@ fn clamp_camera_to_tilemap(
     }
 }
 
+// temporary
 fn adjust_camera_zoom(
     mut cam_qry: Query<&mut OrthographicProjection, With<MainCamera>>,
     kb: Res<ButtonInput<KeyCode>>,

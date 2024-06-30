@@ -3,21 +3,21 @@ use {
         game_state::{GameState, PlayingEntity},
         level,
         texture_atlas_owner::TextureAtlasOwner,
-        tile::{Tile, TILE_SIZE},
+        tile::{Tile, TILE_SIZE, TILE_Z},
     },
     bevy::prelude::*,
     bevy_rapier2d::prelude::*,
     bevy_tnua::TnuaGhostPlatform,
 };
 
-const DOOR_Z: f32 = 1.;
+const DOOR_Z: f32 = TILE_Z;
 const DOOR_PLATFORM_SIZE: Vec2 = Vec2::new(TILE_SIZE.x, TILE_SIZE.y / 6.);
 
-#[derive(Component)]
-pub struct Entrance;
-
-#[derive(Component)]
-pub struct Exit;
+#[derive(Component, PartialEq, Eq, Clone, Copy)]
+pub enum Door {
+    Entrance,
+    Exit,
+}
 
 #[derive(Event)]
 pub struct DoorSpawnEvent {
@@ -27,7 +27,7 @@ pub struct DoorSpawnEvent {
 }
 
 fn on_door_spawn(
-    mut tile_spawn_evr: EventReader<DoorSpawnEvent>,
+    mut door_spawn_evr: EventReader<DoorSpawnEvent>,
     mut cmds: Commands,
     tile_assets: Res<TextureAtlasOwner<Tile>>,
 ) {
@@ -35,30 +35,23 @@ fn on_door_spawn(
         pos,
         tex_idx,
         is_exit,
-    } in tile_spawn_evr.read()
+    } in door_spawn_evr.read()
     {
-        let door_id = cmds
-            .spawn((
-                PlayingEntity,
-                SpriteSheetBundle {
-                    transform: Transform::from_translation(pos.extend(DOOR_Z)),
-                    texture: tile_assets.tex.clone_weak(),
-                    atlas: TextureAtlas {
-                        layout: tile_assets.layout.clone_weak(),
-                        index: tex_idx,
-                    },
-                    ..default()
+        cmds.spawn((
+            if is_exit { Door::Exit } else { Door::Entrance },
+            PlayingEntity,
+            SpriteSheetBundle {
+                transform: Transform::from_translation(pos.extend(DOOR_Z)),
+                texture: tile_assets.tex.clone_weak(),
+                atlas: TextureAtlas {
+                    layout: tile_assets.layout.clone_weak(),
+                    index: tex_idx,
                 },
-                Collider::cuboid(TILE_SIZE.x / 2., TILE_SIZE.y / 2.),
-                Sensor,
-            ))
-            .id();
-
-        if is_exit {
-            cmds.entity(door_id).insert(Exit);
-        } else {
-            cmds.entity(door_id).insert(Entrance);
-        }
+                ..default()
+            },
+            Collider::cuboid(TILE_SIZE.x / 2., TILE_SIZE.y / 2.),
+            Sensor,
+        ));
 
         cmds.spawn((
             PlayingEntity,

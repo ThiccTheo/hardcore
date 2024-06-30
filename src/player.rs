@@ -1,12 +1,13 @@
 use {
     super::{
         animation::{self, AnimationIndices, AnimationState, AnimationTimer},
-        door::Exit,
+        combat::Health,
+        door::Door,
         game_state::{GameState, PlayingEntity},
         level,
         sprite_flip::Flippable,
         texture_atlas_owner::TextureAtlasOwner,
-        tile::TILE_SIZE,
+        tile::{TILE_SIZE, TILE_Z},
     },
     bevy::prelude::*,
     bevy_rapier2d::prelude::*,
@@ -21,7 +22,7 @@ use {
     std::{f32::consts::FRAC_PI_4, time::Duration},
 };
 
-const PLAYER_Z: f32 = 4.;
+const PLAYER_Z: f32 = TILE_Z + 2.;
 const PLAYER_COLLIDER_HALF_HEIGHT: f32 = 16.;
 const PLAYER_COLLDIER_RADIUS: f32 = 16.;
 
@@ -82,6 +83,7 @@ fn on_player_spawn(
             AnimationIndices::default(),
             AnimationTimer::default(),
             Flippable::default(),
+            Health(5),
         ),
         SpriteSheetBundle {
             texture: player_assets.tex.clone_weak(),
@@ -129,7 +131,7 @@ fn player_movement(
         ),
         With<Player>,
     >,
-    exit_qry: Query<Entity, (With<Exit>, With<Collider>, With<Sensor>)>,
+    door_qry: Query<(&Door, Entity), (With<Collider>, With<Sensor>)>,
     rapier_ctx: Res<RapierContext>,
     mut next_state: ResMut<NextState<GameState>>,
 ) {
@@ -193,7 +195,15 @@ fn player_movement(
     }
 
     if player_in.pressed(&PlayerAction::EnterDoor)
-        && rapier_ctx.intersection_pair(player_id, exit_qry.single()) == Some(true)
+        && rapier_ctx.intersection_pair(
+            player_id,
+            door_qry
+                .iter()
+                .filter(|(&door, _)| door == Door::Exit)
+                .map(|(_, door_id)| door_id)
+                .next()
+                .unwrap(),
+        ) == Some(true)
     {
         next_state.set(GameState::Transition);
     }

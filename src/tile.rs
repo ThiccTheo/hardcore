@@ -8,7 +8,7 @@ use {
     bevy_rapier2d::prelude::*,
 };
 
-const TILE_Z: f32 = 1.;
+pub const TILE_Z: f32 = 1.;
 pub const TILE_SIZE: Vec2 = Vec2::splat(128.);
 
 #[derive(Component)]

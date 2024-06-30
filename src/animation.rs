@@ -7,7 +7,7 @@ pub struct AnimationIndices {
 }
 
 #[derive(Component, Clone, Deref, DerefMut)]
-pub struct AnimationTimer(pub Timer);
+pub struct AnimationTimer(Timer);
 
 pub trait AnimationState {
     fn indices(self) -> AnimationIndices;
