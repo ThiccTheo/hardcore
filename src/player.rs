@@ -1,7 +1,8 @@
 use {
     super::{
         animation::{self, AnimationIndices, AnimationState, AnimationTimer},
-        game_state::GameState,
+        door::Exit,
+        game_state::{GameState, PlayingEntity},
         level,
         sprite_flip::Flippable,
         texture_atlas_owner::TextureAtlasOwner,
@@ -77,6 +78,7 @@ fn on_player_spawn(
     cmds.spawn((
         (
             Player,
+            PlayingEntity,
             AnimationIndices::default(),
             AnimationTimer::default(),
             Flippable::default(),
@@ -95,9 +97,9 @@ fn on_player_spawn(
         InputManagerBundle::with_map(InputMap::new([
             (PlayerAction::MoveLeft, KeyCode::KeyA),
             (PlayerAction::MoveRight, KeyCode::KeyD),
-            (PlayerAction::Jump, KeyCode::Space),
+            (PlayerAction::Jump, KeyCode::KeyW),
             (PlayerAction::DropDown, KeyCode::KeyS),
-            (PlayerAction::EnterDoor, KeyCode::KeyW),
+            (PlayerAction::EnterDoor, KeyCode::Space),
         ])),
         RigidBody::Dynamic,
         LockedAxes::ROTATION_LOCKED,
@@ -115,6 +117,7 @@ fn on_player_spawn(
 fn player_movement(
     mut player_qry: Query<
         (
+            Entity,
             &ActionState<PlayerAction>,
             &mut TnuaController,
             &mut TnuaSimpleAirActionsCounter,
@@ -126,8 +129,12 @@ fn player_movement(
         ),
         With<Player>,
     >,
+    exit_qry: Query<Entity, (With<Exit>, With<Collider>, With<Sensor>)>,
+    rapier_ctx: Res<RapierContext>,
+    mut next_state: ResMut<NextState<GameState>>,
 ) {
     let (
+        player_id,
         player_in,
         mut player_kcc,
         mut player_air_actions_count,
@@ -183,6 +190,12 @@ fn player_movement(
         ghost_platforms_handle.try_falling(true);
     } else if *player_animation_idxs != PlayerAnimation::Jumping.indices() {
         ghost_platforms_handle.dont_fall();
+    }
+
+    if player_in.pressed(&PlayerAction::EnterDoor)
+        && rapier_ctx.intersection_pair(player_id, exit_qry.single()) == Some(true)
+    {
+        next_state.set(GameState::Transition);
     }
 }
 

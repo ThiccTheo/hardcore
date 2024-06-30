@@ -1,5 +1,10 @@
 use {
-    super::{game_state::GameState, level, texture_atlas_owner::TextureAtlasOwner, tile::Tile},
+    super::{
+        game_state::{GameState, PlayingEntity},
+        level,
+        texture_atlas_owner::TextureAtlasOwner,
+        tile::Tile,
+    },
     bevy::prelude::*,
 };
 
@@ -21,6 +26,7 @@ fn on_spike_spawn(
     for &SpikeSpawnEvent { pos } in spike_spawn_evr.read() {
         cmds.spawn((
             Spike,
+            PlayingEntity,
             SpriteSheetBundle {
                 transform: Transform::from_translation(pos.extend(SPIKE_Z)),
                 texture: tile_assets.tex.clone_weak(),

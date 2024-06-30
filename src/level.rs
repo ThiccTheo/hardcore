@@ -1,5 +1,6 @@
 use {
     super::{
+        door::DoorSpawnEvent,
         game_state::GameState,
         player::PlayerSpawnEvent,
         spike::SpikeSpawnEvent,
@@ -61,7 +62,7 @@ pub struct LevelData {
 
 impl LevelData {
     fn update(&mut self) {
-        if self.level == 1 {
+        if self.level == 4 {
             self.world += 1;
             self.level = 0;
         }
@@ -71,7 +72,7 @@ impl LevelData {
 
 impl Default for LevelData {
     fn default() -> Self {
-        Self { world: 1, level: 1 }
+        Self { world: 1, level: 0 }
     }
 }
 
@@ -223,6 +224,7 @@ pub fn signal_level_object_spawns(
     mut tile_spawn_evw: EventWriter<TileSpawnEvent>,
     mut player_spawn_evw: EventWriter<PlayerSpawnEvent>,
     mut spike_spawn_evw: EventWriter<SpikeSpawnEvent>,
+    mut door_spawn_evw: EventWriter<DoorSpawnEvent>,
 ) {
     for r in 0..SECTOR_ROWS {
         for c in 0..SECTOR_COLS {
@@ -246,25 +248,21 @@ pub fn signal_level_object_spawns(
                             tile_spawn_evw.send(TileSpawnEvent {
                                 pos,
                                 tex_idx: 5 + level_data.world as usize,
-                                has_collider: true,
-                                is_door: false,
                             });
                         }
                         LevelObject::Entrance => {
                             player_spawn_evw.send(PlayerSpawnEvent { pos });
-                            tile_spawn_evw.send(TileSpawnEvent {
+                            door_spawn_evw.send(DoorSpawnEvent {
                                 pos,
                                 tex_idx: 75 + level_data.world as usize,
-                                has_collider: false,
-                                is_door: true,
+                                is_exit: false,
                             });
                         }
                         LevelObject::Exit => {
-                            tile_spawn_evw.send(TileSpawnEvent {
+                            door_spawn_evw.send(DoorSpawnEvent {
                                 pos,
                                 tex_idx: 75,
-                                has_collider: false,
-                                is_door: true,
+                                is_exit: true,
                             });
                         }
                         LevelObject::Spike => {
@@ -281,8 +279,12 @@ pub fn signal_level_object_spawns(
 pub fn level_plugin(app: &mut App) {
     app.insert_resource(LevelData::default()).add_systems(
         OnEnter(GameState::Playing),
-        generate_sector_layout
-            .pipe(generate_level_layout)
-            .pipe(signal_level_object_spawns),
+        (
+            |mut level_data: ResMut<LevelData>| level_data.update(),
+            generate_sector_layout
+                .pipe(generate_level_layout)
+                .pipe(signal_level_object_spawns),
+        )
+            .chain(),
     );
 }

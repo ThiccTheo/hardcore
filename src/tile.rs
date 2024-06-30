@@ -1,13 +1,15 @@
 use {
-    super::{game_state::GameState, level, texture_atlas_owner::TextureAtlasOwner},
+    super::{
+        game_state::{GameState, PlayingEntity},
+        level,
+        texture_atlas_owner::TextureAtlasOwner,
+    },
     bevy::prelude::*,
     bevy_rapier2d::prelude::*,
-    bevy_tnua::TnuaGhostPlatform,
 };
 
 const TILE_Z: f32 = 1.;
 pub const TILE_SIZE: Vec2 = Vec2::splat(128.);
-const DOOR_PLATFORM_SIZE: Vec2 = Vec2::new(TILE_SIZE.x, TILE_SIZE.y / 6.);
 
 #[derive(Component)]
 pub struct Tile;
@@ -16,8 +18,6 @@ pub struct Tile;
 pub struct TileSpawnEvent {
     pub pos: Vec2,
     pub tex_idx: usize,
-    pub has_collider: bool,
-    pub is_door: bool,
 }
 
 fn on_tile_spawn(
@@ -25,53 +25,21 @@ fn on_tile_spawn(
     mut cmds: Commands,
     tile_assets: Res<TextureAtlasOwner<Tile>>,
 ) {
-    for &TileSpawnEvent {
-        pos,
-        tex_idx,
-        has_collider,
-        is_door,
-    } in tile_spawn_evr.read()
-    {
-        let tile_id = cmds
-            .spawn((
-                Tile,
-                SpriteSheetBundle {
-                    transform: Transform::from_translation(pos.extend(TILE_Z)),
-                    texture: tile_assets.tex.clone_weak(),
-                    atlas: TextureAtlas {
-                        layout: tile_assets.layout.clone_weak(),
-                        index: tex_idx,
-                    },
-                    ..default()
+    for &TileSpawnEvent { pos, tex_idx } in tile_spawn_evr.read() {
+        cmds.spawn((
+            Tile,
+            PlayingEntity,
+            SpriteSheetBundle {
+                transform: Transform::from_translation(pos.extend(TILE_Z)),
+                texture: tile_assets.tex.clone_weak(),
+                atlas: TextureAtlas {
+                    layout: tile_assets.layout.clone_weak(),
+                    index: tex_idx,
                 },
-            ))
-            .id();
-
-        if has_collider {
-            cmds.entity(tile_id)
-                .insert(Collider::cuboid(TILE_SIZE.x / 2., TILE_SIZE.y / 2.));
-        }
-        if is_door {
-            cmds.spawn((
-                TnuaGhostPlatform,
-                Collider::cuboid(DOOR_PLATFORM_SIZE.x / 2., DOOR_PLATFORM_SIZE.y / 2.),
-                SpriteSheetBundle {
-                    sprite: Sprite {
-                        custom_size: Some(DOOR_PLATFORM_SIZE),
-                        ..default()
-                    },
-                    transform: Transform::from_translation(
-                        (pos - Vec2::Y * (TILE_SIZE.y / 2. + DOOR_PLATFORM_SIZE.y / 2.))
-                            .extend(TILE_Z - 0.5),
-                    ),
-                    ..default()
-                },
-                SolverGroups {
-                    memberships: Group::empty(),
-                    filters: Group::empty(),
-                },
-            ));
-        }
+                ..default()
+            },
+            Collider::cuboid(TILE_SIZE.x / 2., TILE_SIZE.y / 2.),
+        ));
     }
 }
 

@@ -1,4 +1,5 @@
 mod animation;
+mod door;
 mod game_state;
 mod level;
 mod main_camera;
@@ -67,6 +68,7 @@ fn main() {
                 TnuaControllerPlugin::new(FixedUpdate),
             ),
             (
+                game_state::game_state_plugin,
                 main_camera::main_camera_plugin,
                 mouse_position::mouse_position_plugin,
                 sprite_flip::sprite_flip_plugin,
@@ -75,6 +77,7 @@ fn main() {
                 level::level_plugin,
                 player::player_plugin,
                 tile::tile_plugin,
+                door::door_plugin,
                 spike::spike_plugin,
             ),
         ))
