@@ -96,6 +96,6 @@ pub fn tile_plugin(app: &mut App) {
         )
         .add_systems(
             OnEnter(GameState::Playing),
-            (on_tile_spawn.after(level::signal_entity_spawns),).chain(),
+            (on_tile_spawn.after(level::signal_level_object_spawns),).chain(),
         );
 }

@@ -6,7 +6,7 @@ pub struct AnimationIndices {
     pub last: usize,
 }
 
-#[derive(Component, Default, Clone, Deref, DerefMut)]
+#[derive(Component, Clone, Deref, DerefMut)]
 pub struct AnimationTimer(pub Timer);
 
 pub trait AnimationState {
@@ -17,6 +17,19 @@ pub trait AnimationState {
 impl AnimationTimer {
     pub fn new(duration: Duration) -> Self {
         Self(Timer::new(duration, TimerMode::Repeating))
+    }
+
+    pub fn zero() -> Self {
+        Self::default()
+    }
+}
+
+impl Default for AnimationTimer {
+    fn default() -> Self {
+        Self(Timer::new(
+            Duration::from_secs_f32(0.),
+            TimerMode::Repeating,
+        ))
     }
 }
 

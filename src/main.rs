@@ -6,8 +6,9 @@ mod mouse_position;
 mod player;
 mod spike;
 mod sprite_flip;
-mod tile;
+mod status_effects;
 mod texture_atlas_owner;
+mod tile;
 
 use {
     bevy::{
@@ -70,6 +71,7 @@ fn main() {
                 mouse_position::mouse_position_plugin,
                 sprite_flip::sprite_flip_plugin,
                 animation::animation_plugin,
+                status_effects::status_effects_plugin,
                 level::level_plugin,
                 player::player_plugin,
                 tile::tile_plugin,

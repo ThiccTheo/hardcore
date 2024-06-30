@@ -12,16 +12,16 @@ use {
     std::cmp::Ordering,
 };
 
-const SECTOR_COLS: usize = 1;
-const SECTOR_ROWS: usize = 8;
-const SECTOR_SIZE: Vec2 = Vec2::new(8., 8.);
+const SECTOR_COLS: usize = 4;
+const SECTOR_ROWS: usize = 4;
+const SECTOR_SIZE: Vec2 = Vec2::new(8., 9.);
 pub const LEVEL_SIZE: Vec2 = Vec2::new(
     SECTOR_SIZE.x * SECTOR_COLS as f32,
     SECTOR_SIZE.y * SECTOR_ROWS as f32,
 );
 
 const_assert!(SECTOR_COLS >= 1 && SECTOR_ROWS >= 2);
-const_assert!(SECTOR_SIZE.x >= 4. && SECTOR_SIZE.y >= 4.);
+const_assert!(SECTOR_SIZE.x >= 4. && SECTOR_SIZE.y >= 4. && SECTOR_SIZE.y <= 9.);
 
 #[derive(Default, Clone, Copy, PartialEq, Eq)]
 pub enum LevelObject {
@@ -217,7 +217,7 @@ fn generate_level_layout(In(sector_layout): In<SectorLayout>) -> LevelLayout {
     level_layout
 }
 
-pub fn signal_entity_spawns(
+pub fn signal_level_object_spawns(
     In(level_layout): In<LevelLayout>,
     level_data: Res<LevelData>,
     mut tile_spawn_evw: EventWriter<TileSpawnEvent>,
@@ -283,6 +283,6 @@ pub fn level_plugin(app: &mut App) {
         OnEnter(GameState::Playing),
         generate_sector_layout
             .pipe(generate_level_layout)
-            .pipe(signal_entity_spawns),
+            .pipe(signal_level_object_spawns),
     );
 }

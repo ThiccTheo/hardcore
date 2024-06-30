@@ -37,6 +37,6 @@ fn on_spike_spawn(
 pub fn spike_plugin(app: &mut App) {
     app.add_event::<SpikeSpawnEvent>().add_systems(
         OnEnter(GameState::Playing),
-        on_spike_spawn.after(level::signal_entity_spawns),
+        on_spike_spawn.after(level::signal_level_object_spawns),
     );
 }

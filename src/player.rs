@@ -56,10 +56,10 @@ impl AnimationState for PlayerAnimation {
 
     fn timer(self) -> AnimationTimer {
         match self {
-            PlayerAnimation::Idling => AnimationTimer::new(Duration::from_secs_f32(0.)),
+            PlayerAnimation::Idling => AnimationTimer::zero(),
             PlayerAnimation::Running => AnimationTimer::new(Duration::from_secs_f32(3f32.recip())),
-            PlayerAnimation::Jumping => AnimationTimer::new(Duration::from_secs_f32(0.)),
-            PlayerAnimation::Falling => AnimationTimer::new(Duration::from_secs_f32(0.)),
+            PlayerAnimation::Jumping => AnimationTimer::zero(),
+            PlayerAnimation::Falling => AnimationTimer::zero(),
         }
     }
 }
@@ -137,7 +137,6 @@ fn player_movement(
         player_ghost_sensor,
         player_animation_idxs,
     ) = player_qry.single_mut();
-    player_air_actions_count.update(&player_kcc);
 
     player_kcc.basis(TnuaBuiltinWalk {
         max_slope: FRAC_PI_4,
@@ -163,10 +162,12 @@ fn player_movement(
         ..default()
     });
 
+    player_air_actions_count.update(&player_kcc);
+
     if player_in.pressed(&PlayerAction::Jump) {
         player_kcc.action(TnuaBuiltinJump {
             height: TILE_SIZE.y * 1.5,
-            allow_in_air: false,
+            allow_in_air: player_air_actions_count.air_count_for(TnuaBuiltinJump::NAME) < 2,
             shorten_extra_gravity: 0.,
             ..default()
         });
@@ -256,7 +257,7 @@ pub fn player_plugin(app: &mut App) {
         )
         .add_systems(
             OnEnter(GameState::Playing),
-            on_player_spawn.after(level::signal_entity_spawns),
+            on_player_spawn.after(level::signal_level_object_spawns),
         )
         .add_systems(
             Update,
