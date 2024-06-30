@@ -14,7 +14,7 @@ pub struct PlayingEntity;
 struct TransitionEntity;
 
 fn destroy_state<T: Component>(mut cmds: Commands, game_state_qry: Query<Entity, With<T>>) {
-    for id in game_state_qry.iter() {
+    for id in &game_state_qry {
         cmds.entity(id).despawn_recursive();
     }
 }

@@ -32,12 +32,12 @@ impl Iframes {
 
 fn deal_damage(
     mut hp_qry: Query<(Entity, &mut Health, Has<Sensor>), (With<Collider>, Without<Iframes>)>,
-    mut dmg_qry: Query<(Entity, &Damage, Has<Sensor>), With<Collider>>,
+    dmg_qry: Query<(Entity, &Damage, Has<Sensor>), With<Collider>>,
     rapier_ctx: Res<RapierContext>,
     mut cmds: Commands,
 ) {
-    for (hp_id, mut hp, hp_has_sensor) in hp_qry.iter_mut() {
-        for (dmg_id, dmg, dmg_has_sensor) in dmg_qry.iter_mut() {
+    for (hp_id, mut hp, hp_has_sensor) in &mut hp_qry {
+        for (dmg_id, dmg, dmg_has_sensor) in &dmg_qry {
             if (hp_id != dmg_id)
                 && (hp_has_sensor || dmg_has_sensor)
                 && (rapier_ctx.intersection_pair(hp_id, dmg_id) == Some(true))
@@ -69,7 +69,7 @@ fn update_iframes(
 ) {
     let dt = time.delta();
 
-    for (id, mut invincible, mut sprite) in iframes_qry.iter_mut() {
+    for (id, mut invincible, mut sprite) in &mut iframes_qry {
         invincible.timer.tick(dt);
         sprite.color.set_a(f32::sin(
             invincible.timer.elapsed_secs() * Iframes::FREQUENCY * TAU,

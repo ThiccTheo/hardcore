@@ -267,7 +267,7 @@ pub fn player_plugin(app: &mut App) {
              asset_server: Res<AssetServer>,
              mut tex_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>| {
                 cmds.insert_resource(TextureAtlasOwner::<Player>::new(
-                    asset_server.load("player.png"),
+                    asset_server.load("adventurer.png"),
                     tex_atlas_layouts.add(TextureAtlasLayout::from_grid(
                         Vec2::new(80., 110.),
                         9,

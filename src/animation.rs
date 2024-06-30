@@ -36,7 +36,7 @@ impl Default for AnimationTimer {
 pub fn adjust_sprite_indices(
     mut animation_qry: Query<(&mut TextureAtlas, &AnimationIndices), Changed<AnimationIndices>>,
 ) {
-    for (mut tex_atlas, animation_indices) in animation_qry.iter_mut() {
+    for (mut tex_atlas, animation_indices) in &mut animation_qry {
         tex_atlas.index = animation_indices.first;
     }
 }
@@ -45,7 +45,7 @@ fn animate_sprites(
     time: Res<Time>,
     mut animation_qry: Query<(&AnimationIndices, &mut AnimationTimer, &mut TextureAtlas)>,
 ) {
-    for (animation_indices, mut animation_timer, mut tex_atlas) in animation_qry.iter_mut() {
+    for (animation_indices, mut animation_timer, mut tex_atlas) in &mut animation_qry {
         animation_timer.tick(time.delta());
         if animation_timer.just_finished() {
             tex_atlas.index = animation_indices.first

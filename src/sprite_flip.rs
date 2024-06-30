@@ -11,7 +11,7 @@ fn propagate_sprite_flips(
     mut children_qry: Query<&mut Transform, (With<Parent>, With<Flippable>)>,
     mut flippable_qry: Query<&mut Flippable>,
 ) {
-    for (parent_id, children) in parent_qry.iter() {
+    for (parent_id, children) in &parent_qry {
         for &child_id in children.iter() {
             let Ok(mut child_xform) = children_qry.get_mut(child_id) else {
                 continue;
@@ -34,7 +34,7 @@ fn propagate_sprite_flips(
 }
 
 fn convert_flippables_to_sprite_flips(mut sprite_qry: Query<(&mut Sprite, &Flippable)>) {
-    for (mut sprite, flippable) in sprite_qry.iter_mut() {
+    for (mut sprite, flippable) in &mut sprite_qry {
         let Vec2 {
             x: anchor_x,
             y: anchor_y,
