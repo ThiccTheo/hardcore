@@ -3,7 +3,8 @@ use {
         combat::Health,
         game_state::{GameState, PlayingEntity},
         player::{self, Player, PLAYER_MAX_HEALTH},
-        tile::TILE_SIZE,
+        texture_atlas_owner::TextureAtlasOwner,
+        tile::{Tile, TILE_SIZE},
     },
     crate::RESOLUTION,
     bevy::prelude::*,
@@ -13,11 +14,7 @@ use {
 #[derive(Component)]
 struct Healthbar;
 
-fn spawn_hud(
-    mut cmds: Commands,
-    asset_server: Res<AssetServer>,
-    mut tex_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
-) {
+fn spawn_hud(mut cmds: Commands, tile_assets: Res<TextureAtlasOwner<Tile>>) {
     cmds.spawn((
         NodeBundle {
             style: Style {
@@ -47,11 +44,10 @@ fn spawn_hud(
                 for _ in 0..PLAYER_MAX_HEALTH.0 / 2 {
                     healthbar.spawn(AtlasImageBundle {
                         style: Style { ..default() },
-                        image: UiImage::new(asset_server.load("heart.png")),
+                        image: UiImage::new(tile_assets.tex.clone_weak()),
                         texture_atlas: TextureAtlas {
-                            layout: tex_atlas_layouts
-                                .add(TextureAtlasLayout::from_grid(TILE_SIZE, 1, 3, None, None)),
-                            index: 0,
+                            layout: tile_assets.layout.clone_weak(),
+                            index: 39,
                         },
                         ..default()
                     });
@@ -72,9 +68,9 @@ fn update_hud(
             continue;
         };
         heart_tex_atlas.index = match player_hp.cmp(&1) {
-            Ordering::Less => 0,
-            Ordering::Equal => 1,
-            Ordering::Greater => 2,
+            Ordering::Less => 39,
+            Ordering::Equal => 53,
+            Ordering::Greater => 67,
         };
         player_hp -= 2;
     }
