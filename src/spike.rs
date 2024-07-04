@@ -44,7 +44,7 @@ fn on_spike_spawn(
             parent.spawn((
                 Collider::cuboid(SPIKE_COLLIDER_SIZE.x / 2., SPIKE_COLLIDER_SIZE.y / 2.),
                 Sensor,
-                Damage::Kill,
+                Damage::Fixed(1),
                 SpatialBundle::from_transform(Transform::from_xyz(
                     0.,
                     -(TILE_SIZE.y - SPIKE_COLLIDER_SIZE.y) / 2.,

@@ -5,7 +5,7 @@ use {
     std::{f32::consts::TAU, time::Duration},
 };
 
-#[derive(Component)]
+#[derive(Component, Clone, Copy)]
 pub struct Health(pub i8);
 
 #[derive(Component)]

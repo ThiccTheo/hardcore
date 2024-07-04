@@ -10,6 +10,7 @@ mod spike;
 mod sprite_flip;
 mod texture_atlas_owner;
 mod tile;
+mod ui;
 
 use {
     bevy::{
@@ -63,7 +64,7 @@ fn main() {
                 InputManagerPlugin::<PlayerAction>::default(),
                 RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(TILE_SIZE.x)
                     .in_fixed_schedule(),
-                RapierDebugRenderPlugin::default(),
+                //RapierDebugRenderPlugin::default(),
                 TnuaRapier2dPlugin::new(FixedUpdate),
                 TnuaControllerPlugin::new(FixedUpdate),
             ),
@@ -73,6 +74,7 @@ fn main() {
                 mouse_position::mouse_position_plugin,
                 sprite_flip::sprite_flip_plugin,
                 animation::animation_plugin,
+                ui::ui_plugin,
                 combat::combat_plugin,
                 level::level_plugin,
                 player::player_plugin,

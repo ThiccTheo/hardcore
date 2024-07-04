@@ -19,15 +19,25 @@ use {
     },
     bevy_tnua_rapier2d::{TnuaRapier2dIOBundle, TnuaRapier2dSensorShape},
     leafwing_input_manager::prelude::*,
+    static_assertions::const_assert,
     std::{f32::consts::FRAC_PI_4, time::Duration},
 };
 
 const PLAYER_Z: f32 = TILE_Z + 2.;
 const PLAYER_COLLIDER_HALF_HEIGHT: f32 = 16.;
 const PLAYER_COLLDIER_RADIUS: f32 = 16.;
+pub const PLAYER_MAX_HEALTH: Health = Health(10);
+
+const_assert!(PLAYER_MAX_HEALTH.0 > 0 && PLAYER_MAX_HEALTH.0 % 2 == 0);
 
 #[derive(Component)]
 pub struct Player;
+
+// SUBJECT TO CHANGE
+#[derive(Resource)]
+pub struct PersistentPlayerData {
+    hp: Health,
+}
 
 #[derive(Actionlike, PartialEq, Eq, Hash, Clone, Reflect)]
 pub enum PlayerAction {
@@ -71,10 +81,11 @@ pub struct PlayerSpawnEvent {
     pub pos: Vec2,
 }
 
-fn on_player_spawn(
+pub fn on_player_spawn(
     mut player_spawn_evr: EventReader<PlayerSpawnEvent>,
     mut cmds: Commands,
     player_assets: Res<TextureAtlasOwner<Player>>,
+    persistent_player_data: Option<Res<PersistentPlayerData>>,
 ) {
     cmds.spawn((
         (
@@ -83,7 +94,9 @@ fn on_player_spawn(
             AnimationIndices::default(),
             AnimationTimer::default(),
             Flippable::default(),
-            Health(5),
+            persistent_player_data
+                .map(|data| data.hp)
+                .unwrap_or(PLAYER_MAX_HEALTH),
         ),
         SpriteSheetBundle {
             texture: player_assets.tex.clone_weak(),
@@ -106,6 +119,7 @@ fn on_player_spawn(
         RigidBody::Dynamic,
         LockedAxes::ROTATION_LOCKED,
         Collider::capsule_y(PLAYER_COLLIDER_HALF_HEIGHT, PLAYER_COLLDIER_RADIUS),
+        Friction::coefficient(0.),
         TnuaRapier2dIOBundle::default(),
         TnuaControllerBundle::default(),
         TnuaSimpleAirActionsCounter::default(),
@@ -151,9 +165,9 @@ fn player_movement(
         max_slope: FRAC_PI_4,
         spring_dampening: 0.5,
         float_height: PLAYER_COLLIDER_HALF_HEIGHT + PLAYER_COLLDIER_RADIUS + 14.,
-        air_acceleration: 2. * TILE_SIZE.x,
-        acceleration: 2. * TILE_SIZE.x,
-        desired_velocity: 3.
+        air_acceleration: 5. * TILE_SIZE.x,
+        acceleration: 5. * TILE_SIZE.x,
+        desired_velocity: 4.
             * TILE_SIZE.x
             * if player_in.pressed(&PlayerAction::MoveLeft)
                 && player_in.released(&PlayerAction::MoveRight)
@@ -177,7 +191,6 @@ fn player_movement(
         player_kcc.action(TnuaBuiltinJump {
             height: TILE_SIZE.y * 1.5,
             allow_in_air: player_air_actions_count.air_count_for(TnuaBuiltinJump::NAME) < 2,
-            shorten_extra_gravity: 0.,
             ..default()
         });
     }
@@ -267,7 +280,7 @@ pub fn player_plugin(app: &mut App) {
              asset_server: Res<AssetServer>,
              mut tex_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>| {
                 cmds.insert_resource(TextureAtlasOwner::<Player>::new(
-                    asset_server.load("adventurer.png"),
+                    asset_server.load("player.png"),
                     tex_atlas_layouts.add(TextureAtlasLayout::from_grid(
                         Vec2::new(80., 110.),
                         9,
@@ -281,6 +294,14 @@ pub fn player_plugin(app: &mut App) {
         .add_systems(
             OnEnter(GameState::Playing),
             on_player_spawn.after(level::signal_level_object_spawns),
+        )
+        .add_systems(
+            OnExit(GameState::Playing),
+            |player_qry: Query<&Health, With<Player>>, mut cmds: Commands| {
+                cmds.insert_resource(PersistentPlayerData {
+                    hp: *player_qry.single(),
+                })
+            },
         )
         .add_systems(
             Update,
