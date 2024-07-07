@@ -1,8 +1,8 @@
 use {
     super::{
+        asset_owners::TextureAtlasOwner,
         game_state::{GameState, PlayingEntity},
         level,
-        asset_owners::TextureAtlasOwner,
     },
     bevy::prelude::*,
     bevy_rapier2d::prelude::*,

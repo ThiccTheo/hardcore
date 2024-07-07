@@ -1,4 +1,5 @@
 mod animation;
+mod asset_owners;
 mod combat;
 mod door;
 mod game_state;
@@ -8,7 +9,6 @@ mod mouse_position;
 mod player;
 mod spike;
 mod sprite_flip;
-mod asset_owners;
 mod tile;
 mod ui;
 

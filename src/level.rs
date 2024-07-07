@@ -15,7 +15,7 @@ use {
 
 const SECTOR_COLS: usize = 4;
 const SECTOR_ROWS: usize = 4;
-const SECTOR_SIZE: Vec2 = Vec2::new(8., 9.);
+const SECTOR_SIZE: Vec2 = Vec2::new(9., 9.);
 pub const LEVEL_SIZE: Vec2 = Vec2::new(
     SECTOR_SIZE.x * SECTOR_COLS as f32,
     SECTOR_SIZE.y * SECTOR_ROWS as f32,
@@ -29,7 +29,8 @@ pub enum LevelObject {
     #[default]
     Background,
     Entrance,
-    Spike,
+    Stalactite,
+    Stalagmite,
     Tile,
     Exit,
     Path,
@@ -176,35 +177,43 @@ fn generate_level_layout(In(sector_layout): In<SectorLayout>) -> LevelLayout {
                     LevelObject::Exit;
             }
 
-            // STILL IN TEST PHASE
-            for y in 1..SECTOR_SIZE.y as usize - 1 {
-                for x in 1..SECTOR_SIZE.x as usize - 1 {
+            for y in (1..SECTOR_SIZE.y as usize / 2)
+                .into_iter()
+                .chain((SECTOR_SIZE.y as usize / 2..SECTOR_SIZE.y as usize - 1).rev())
+            {
+                for x in (1..SECTOR_SIZE.x as usize / 2)
+                    .into_iter()
+                    .chain((SECTOR_SIZE.x as usize / 2..SECTOR_SIZE.x as usize - 1).rev())
+                {
                     if sector_contents[y][x] == LevelObject::Background
                         && [
-                            sector_contents[y - 1][x - 1],
                             sector_contents[y - 1][x],
-                            sector_contents[y - 1][x + 1],
                             sector_contents[y][x - 1],
                             sector_contents[y][x + 1],
-                            sector_contents[y + 1][x - 1],
                             sector_contents[y + 1][x],
-                            sector_contents[y + 1][x + 1],
                         ]
                         .into_iter()
                         .any(|neighbor| neighbor == LevelObject::Tile)
-                        && rand::thread_rng().gen_ratio(1, 2)
+                        && rand::thread_rng().gen_ratio(1, 3)
                     {
                         sector_contents[y][x] = LevelObject::Tile;
                     }
                 }
             }
-            for y in 0..SECTOR_SIZE.y as usize - 1 {
+            for y in 1..SECTOR_SIZE.y as usize - 1 {
                 for x in 0..SECTOR_SIZE.x as usize {
                     if sector_contents[y][x] == LevelObject::Background
-                        && sector_contents[y + 1][x] == LevelObject::Tile
                         && rand::thread_rng().gen_ratio(1, 4)
                     {
-                        sector_contents[y][x] = LevelObject::Spike;
+                        if sector_contents[y - 1][x] == LevelObject::Tile
+                            && sector_contents[y + 1][x] == LevelObject::Background
+                        {
+                            sector_contents[y][x] = LevelObject::Stalactite
+                        } else if sector_contents[y - 1][x] == LevelObject::Background
+                            && sector_contents[y + 1][x] == LevelObject::Tile
+                        {
+                            sector_contents[y][x] = LevelObject::Stalagmite
+                        }
                     }
                 }
             }
@@ -261,8 +270,11 @@ pub fn signal_level_object_spawns(
                                 is_exit: true,
                             });
                         }
-                        LevelObject::Spike => {
-                            spike_spawn_evw.send(SpikeSpawnEvent { pos });
+                        spike_type @ (LevelObject::Stalactite | LevelObject::Stalagmite) => {
+                            spike_spawn_evw.send(SpikeSpawnEvent {
+                                pos,
+                                on_ceil: spike_type == LevelObject::Stalactite,
+                            });
                         }
                         _ => (),
                     }

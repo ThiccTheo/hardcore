@@ -31,23 +31,11 @@ fn clamp_camera_to_tilemap(
     };
 
     let tilemap_size_px = LEVEL_SIZE * TILE_SIZE;
-    let tilemap_parity_correction = Vec2::new(
-        if LEVEL_SIZE.x as usize % 2 == 0 {
-            0.
-        } else {
-            TILE_SIZE.x / 2.
-        },
-        if LEVEL_SIZE.y as usize % 2 == 0 {
-            0.
-        } else {
-            TILE_SIZE.y / 2.
-        },
-    );
     let (tilemap_left_px, tilemap_right_px, tilemap_top_px, tilemap_bottom_px) = (
-        -tilemap_size_px.x / 2. - tilemap_parity_correction.x,
-        tilemap_size_px.x / 2. + tilemap_parity_correction.x,
-        tilemap_size_px.y / 2. + tilemap_parity_correction.y,
-        -tilemap_size_px.y / 2. - tilemap_parity_correction.y,
+        -tilemap_size_px.x / 2.,
+        tilemap_size_px.x / 2.,
+        tilemap_size_px.y / 2.,
+        -tilemap_size_px.y / 2.,
     );
 
     if tilemap_size_px.x > scaled_viewport_size.x {
