@@ -3,8 +3,24 @@ use {
     bevy::{prelude::*, window::PrimaryWindow},
 };
 
-#[derive(Resource, Default, DerefMut, Deref)]
-pub struct MousePosition(pub Vec2);
+#[derive(Resource, Default)]
+pub struct MousePosition(Vec2);
+
+impl MousePosition {
+    pub fn x(&self) -> f32 {
+        self.0.x
+    }
+
+    pub fn y(&self) -> f32 {
+        self.0.y
+    }
+}
+
+impl From<MousePosition> for Vec2 {
+    fn from(mouse_pos: MousePosition) -> Self {
+        mouse_pos.0
+    }
+}
 
 fn update_mouse_position(
     mut old_mouse_pos: ResMut<MousePosition>,

@@ -15,7 +15,7 @@ pub enum Damage {
 }
 
 #[derive(Component)]
-pub struct Iframes {
+struct Iframes {
     timer: Timer,
 }
 

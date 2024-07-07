@@ -2,8 +2,8 @@ use {bevy::prelude::*, std::marker::PhantomData};
 
 #[derive(Resource)]
 pub struct TextureAtlasOwner<T> {
-    pub tex: Handle<Image>,
-    pub layout: Handle<TextureAtlasLayout>,
+    tex: Handle<Image>,
+    layout: Handle<TextureAtlasLayout>,
     _marker: PhantomData<T>,
 }
 
@@ -15,11 +15,19 @@ impl<T: Component> TextureAtlasOwner<T> {
             _marker: PhantomData,
         }
     }
+
+    pub fn texture(&self) -> Handle<Image> {
+        self.tex.clone_weak()
+    }
+
+    pub fn layout(&self) -> Handle<TextureAtlasLayout> {
+        self.layout.clone_weak()
+    }
 }
 
 #[derive(Resource)]
 pub struct FontOwner<T> {
-    pub font: Handle<Font>,
+    font: Handle<Font>,
     _marker: PhantomData<T>,
 }
 
@@ -29,5 +37,9 @@ impl<T: Component> FontOwner<T> {
             font,
             _marker: PhantomData,
         }
+    }
+
+    pub fn font(&self) -> Handle<Font> {
+        self.font.clone_weak()
     }
 }

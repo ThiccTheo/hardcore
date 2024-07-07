@@ -64,14 +64,14 @@ fn spawn_hud(
                 .with_children(|healthbar| {
                     for _ in 0..PLAYER_MAX_HEALTH.0 / 2 {
                         healthbar.spawn(AtlasImageBundle {
-                            image: UiImage::new(tile_assets.tex.clone_weak()),
+                            image: UiImage::new(tile_assets.texture()),
                             style: Style {
                                 max_width: Val::Percent(100. / (PLAYER_MAX_HEALTH.0 / 2) as f32),
                                 max_height: Val::Percent(100.),
                                 ..default()
                             },
                             texture_atlas: TextureAtlas {
-                                layout: tile_assets.layout.clone_weak(),
+                                layout: tile_assets.layout(),
                                 index: 39,
                             },
                             ..default()
@@ -85,7 +85,7 @@ fn spawn_hud(
                         level = level_info.level()
                     ),
                     TextStyle {
-                        font: ui_font.font.clone_weak(),
+                        font: ui_font.font(),
                         font_size: 40.,
                         color: Color::BLACK,
                         ..default()

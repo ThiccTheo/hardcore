@@ -2,11 +2,18 @@ use {bevy::prelude::*, std::time::Duration};
 
 #[derive(Component, PartialEq, Default, Clone)]
 pub struct AnimationIndices {
-    pub first: usize,
-    pub last: usize,
+    first: usize,
+    last: usize,
 }
 
-#[derive(Component, Clone, Deref, DerefMut)]
+impl AnimationIndices {
+    pub const fn new(first: usize, last: usize) -> Self {
+        assert!(first <= last);
+        Self { first, last }
+    }
+}
+
+#[derive(Component, Clone)]
 pub struct AnimationTimer(Timer);
 
 pub trait AnimationState {
@@ -46,8 +53,8 @@ fn animate_sprites(
     mut animation_qry: Query<(&AnimationIndices, &mut AnimationTimer, &mut TextureAtlas)>,
 ) {
     for (animation_indices, mut animation_timer, mut tex_atlas) in &mut animation_qry {
-        animation_timer.tick(time.delta());
-        if animation_timer.just_finished() {
+        animation_timer.0.tick(time.delta());
+        if animation_timer.0.just_finished() {
             tex_atlas.index = animation_indices.first
                 + (tex_atlas.index + 1 - animation_indices.first)
                     % (animation_indices.last + 1 - animation_indices.first);

@@ -42,9 +42,9 @@ fn on_door_spawn(
             PlayingEntity,
             SpriteSheetBundle {
                 transform: Transform::from_translation(pos.extend(DOOR_Z)),
-                texture: tile_assets.tex.clone_weak(),
+                texture: tile_assets.texture(),
                 atlas: TextureAtlas {
-                    layout: tile_assets.layout.clone_weak(),
+                    layout: tile_assets.layout(),
                     index: tex_idx,
                 },
                 ..default()

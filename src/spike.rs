@@ -32,9 +32,9 @@ fn on_spike_spawn(
             PlayingEntity,
             SpriteSheetBundle {
                 transform: Transform::from_translation(pos.extend(SPIKE_Z)),
-                texture: tile_assets.tex.clone_weak(),
+                texture: tile_assets.texture(),
                 atlas: TextureAtlas {
-                    layout: tile_assets.layout.clone_weak(),
+                    layout: tile_assets.layout(),
                     index: 70,
                 },
                 ..default()

@@ -1,12 +1,12 @@
 use {
     super::{
         animation::{self, AnimationIndices, AnimationState, AnimationTimer},
+        asset_owners::TextureAtlasOwner,
         combat::Health,
         door::Door,
         game_state::{GameState, PlayingEntity},
         level,
         sprite_flip::Flippable,
-        asset_owners::TextureAtlasOwner,
         tile::{TILE_SIZE, TILE_Z},
     },
     bevy::prelude::*,
@@ -59,10 +59,10 @@ enum PlayerAnimation {
 impl AnimationState for PlayerAnimation {
     fn indices(self) -> AnimationIndices {
         match self {
-            PlayerAnimation::Idling => AnimationIndices { first: 0, last: 0 },
-            PlayerAnimation::Running => AnimationIndices { first: 9, last: 10 },
-            PlayerAnimation::Jumping => AnimationIndices { first: 1, last: 1 },
-            PlayerAnimation::Falling => AnimationIndices { first: 2, last: 2 },
+            PlayerAnimation::Idling => AnimationIndices::new(0, 0),
+            PlayerAnimation::Running => AnimationIndices::new(9, 10),
+            PlayerAnimation::Jumping => AnimationIndices::new(1, 1),
+            PlayerAnimation::Falling => AnimationIndices::new(2, 2),
         }
     }
 
@@ -99,9 +99,9 @@ pub fn on_player_spawn(
                 .unwrap_or(PLAYER_MAX_HEALTH),
         ),
         SpriteSheetBundle {
-            texture: player_assets.tex.clone_weak(),
+            texture: player_assets.texture(),
             atlas: TextureAtlas {
-                layout: player_assets.layout.clone_weak(),
+                layout: player_assets.layout(),
                 index: 0,
             },
             transform: Transform::from_translation(
