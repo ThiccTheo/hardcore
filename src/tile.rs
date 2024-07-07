@@ -2,7 +2,7 @@ use {
     super::{
         game_state::{GameState, PlayingEntity},
         level,
-        texture_atlas_owner::TextureAtlasOwner,
+        asset_owners::TextureAtlasOwner,
     },
     bevy::prelude::*,
     bevy_rapier2d::prelude::*,

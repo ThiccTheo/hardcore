@@ -55,12 +55,12 @@ bitflags! {
 }
 
 #[derive(Resource)]
-pub struct LevelData {
+pub struct LevelInfo {
     world: u8,
     level: u8,
 }
 
-impl LevelData {
+impl LevelInfo {
     fn update(&mut self) {
         if self.level == 4 {
             self.world += 1;
@@ -68,9 +68,17 @@ impl LevelData {
         }
         self.level += 1;
     }
+
+    pub fn world(&self) -> u8 {
+        self.world
+    }
+
+    pub fn level(&self) -> u8 {
+        self.level
+    }
 }
 
-impl Default for LevelData {
+impl Default for LevelInfo {
     fn default() -> Self {
         Self { world: 1, level: 0 }
     }
@@ -208,7 +216,7 @@ fn generate_level_layout(In(sector_layout): In<SectorLayout>) -> LevelLayout {
 
 pub fn signal_level_object_spawns(
     In(level_layout): In<LevelLayout>,
-    level_data: Res<LevelData>,
+    level_info: Res<LevelInfo>,
     mut tile_spawn_evw: EventWriter<TileSpawnEvent>,
     mut player_spawn_evw: EventWriter<PlayerSpawnEvent>,
     mut spike_spawn_evw: EventWriter<SpikeSpawnEvent>,
@@ -235,14 +243,14 @@ pub fn signal_level_object_spawns(
                         LevelObject::Tile => {
                             tile_spawn_evw.send(TileSpawnEvent {
                                 pos,
-                                tex_idx: 5 + level_data.world as usize,
+                                tex_idx: 5 + level_info.world as usize,
                             });
                         }
                         LevelObject::Entrance => {
                             player_spawn_evw.send(PlayerSpawnEvent { pos });
                             door_spawn_evw.send(DoorSpawnEvent {
                                 pos,
-                                tex_idx: 75 + level_data.world as usize,
+                                tex_idx: 75 + level_info.world as usize,
                                 is_exit: false,
                             });
                         }
@@ -265,10 +273,10 @@ pub fn signal_level_object_spawns(
 }
 
 pub fn level_plugin(app: &mut App) {
-    app.insert_resource(LevelData::default()).add_systems(
+    app.insert_resource(LevelInfo::default()).add_systems(
         OnEnter(GameState::Playing),
         (
-            |mut level_data: ResMut<LevelData>| level_data.update(),
+            |mut level_info: ResMut<LevelInfo>| level_info.update(),
             generate_sector_layout
                 .pipe(generate_level_layout)
                 .pipe(signal_level_object_spawns),

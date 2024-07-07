@@ -6,7 +6,7 @@ use {
         game_state::{GameState, PlayingEntity},
         level,
         sprite_flip::Flippable,
-        texture_atlas_owner::TextureAtlasOwner,
+        asset_owners::TextureAtlasOwner,
         tile::{TILE_SIZE, TILE_Z},
     },
     bevy::prelude::*,

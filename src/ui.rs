@@ -1,10 +1,11 @@
 use {
     super::{
+        asset_owners::{FontOwner, TextureAtlasOwner},
         combat::Health,
         game_state::{GameState, PlayingEntity},
+        level::LevelInfo,
         player::{self, Player, PLAYER_MAX_HEALTH},
-        texture_atlas_owner::TextureAtlasOwner,
-        tile::{Tile, TILE_SIZE},
+        tile::Tile,
     },
     crate::RESOLUTION,
     bevy::prelude::*,
@@ -12,9 +13,17 @@ use {
 };
 
 #[derive(Component)]
+struct Ui;
+
+#[derive(Component)]
 struct Healthbar;
 
-fn spawn_hud(mut cmds: Commands, tile_assets: Res<TextureAtlasOwner<Tile>>) {
+fn spawn_hud(
+    mut cmds: Commands,
+    tile_assets: Res<TextureAtlasOwner<Tile>>,
+    ui_font: Res<FontOwner<Ui>>,
+    level_info: Res<LevelInfo>,
+) {
     cmds.spawn((
         NodeBundle {
             style: Style {
@@ -28,30 +37,60 @@ fn spawn_hud(mut cmds: Commands, tile_assets: Res<TextureAtlasOwner<Tile>>) {
     ))
     .with_children(|screen| {
         screen
-            .spawn((
-                Healthbar,
-                NodeBundle {
-                    style: Style {
-                        width: Val::Percent(30.),
-                        height: Val::Percent(10.),
-                        justify_content: JustifyContent::SpaceEvenly,
-                        ..default()
-                    },
+            .spawn(NodeBundle {
+                style: Style {
+                    width: Val::Percent(100.),
+                    height: Val::Percent(10.),
+                    justify_content: JustifyContent::SpaceBetween,
+                    align_items: AlignItems::Center,
                     ..default()
                 },
-            ))
-            .with_children(|healthbar| {
-                for _ in 0..PLAYER_MAX_HEALTH.0 / 2 {
-                    healthbar.spawn(AtlasImageBundle {
-                        style: Style { ..default() },
-                        image: UiImage::new(tile_assets.tex.clone_weak()),
-                        texture_atlas: TextureAtlas {
-                            layout: tile_assets.layout.clone_weak(),
-                            index: 39,
+                ..default()
+            })
+            .with_children(|hud| {
+                hud.spawn((
+                    Healthbar,
+                    NodeBundle {
+                        style: Style {
+                            width: Val::Percent(30.),
+                            height: Val::Percent(100.),
+                            justify_content: JustifyContent::SpaceEvenly,
+                            align_items: AlignItems::Center,
+                            ..default()
                         },
                         ..default()
-                    });
-                }
+                    },
+                ))
+                .with_children(|healthbar| {
+                    for _ in 0..PLAYER_MAX_HEALTH.0 / 2 {
+                        healthbar.spawn(AtlasImageBundle {
+                            image: UiImage::new(tile_assets.tex.clone_weak()),
+                            style: Style {
+                                max_width: Val::Percent(100. / (PLAYER_MAX_HEALTH.0 / 2) as f32),
+                                max_height: Val::Percent(100.),
+                                ..default()
+                            },
+                            texture_atlas: TextureAtlas {
+                                layout: tile_assets.layout.clone_weak(),
+                                index: 39,
+                            },
+                            ..default()
+                        });
+                    }
+                });
+                hud.spawn(TextBundle::from_section(
+                    format!(
+                        "{world}-{level}",
+                        world = level_info.world(),
+                        level = level_info.level()
+                    ),
+                    TextStyle {
+                        font: ui_font.font.clone_weak(),
+                        font_size: 40.,
+                        color: Color::BLACK,
+                        ..default()
+                    },
+                ));
             });
     });
 }
@@ -78,6 +117,12 @@ fn update_hud(
 
 pub fn ui_plugin(app: &mut App) {
     app.add_systems(
+        Startup,
+        |mut cmds: Commands, asset_server: Res<AssetServer>| {
+            cmds.insert_resource(FontOwner::<Ui>::new(asset_server.load("font.ttf")));
+        },
+    )
+    .add_systems(
         OnEnter(GameState::Playing),
         spawn_hud.after(player::on_player_spawn),
     )

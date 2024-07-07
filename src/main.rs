@@ -8,7 +8,7 @@ mod mouse_position;
 mod player;
 mod spike;
 mod sprite_flip;
-mod texture_atlas_owner;
+mod asset_owners;
 mod tile;
 mod ui;
 
