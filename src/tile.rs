@@ -1,9 +1,6 @@
 use {
-    super::{
-        asset_owners::TextureAtlasOwner,
-        game_state::{GameState, PlayingEntity},
-        level,
-    },
+    super::{asset_owners::TextureAtlasOwner, level},
+    crate::GameState,
     bevy::prelude::*,
     bevy_rapier2d::prelude::*,
 };
@@ -28,15 +25,15 @@ fn on_tile_spawn(
     for &TileSpawnEvent { pos, tex_idx } in tile_spawn_evr.read() {
         cmds.spawn((
             Tile,
-            PlayingEntity,
-            SpriteSheetBundle {
+            StateScoped(GameState::Playing),
+            SpriteBundle {
                 transform: Transform::from_translation(pos.extend(TILE_Z)),
                 texture: tile_assets.texture(),
-                atlas: TextureAtlas {
-                    layout: tile_assets.layout(),
-                    index: tex_idx,
-                },
                 ..default()
+            },
+            TextureAtlas {
+                layout: tile_assets.layout(),
+                index: tex_idx,
             },
             Collider::cuboid(TILE_SIZE.x / 2., TILE_SIZE.y / 2.),
         ));
@@ -46,14 +43,14 @@ fn on_tile_spawn(
 pub fn tile_plugin(app: &mut App) {
     app.add_event::<TileSpawnEvent>()
         .add_systems(
-            Startup,
+            OnEnter(GameState::Setup),
             |mut cmds: Commands,
              asset_server: Res<AssetServer>,
              mut tex_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>| {
                 cmds.insert_resource(TextureAtlasOwner::<Tile>::new(
                     asset_server.load("tile.png"),
                     tex_atlas_layouts.add(TextureAtlasLayout::from_grid(
-                        Vec2::splat(128.),
+                        UVec2::splat(128),
                         14,
                         7,
                         None,

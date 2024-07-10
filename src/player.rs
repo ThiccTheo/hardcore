@@ -4,11 +4,11 @@ use {
         asset_owners::TextureAtlasOwner,
         combat::Health,
         door::Door,
-        game_state::{GameState, PlayingEntity},
         level,
         sprite_flip::Flippable,
         tile::{TILE_SIZE, TILE_Z},
     },
+    crate::GameState,
     bevy::prelude::*,
     bevy_rapier2d::prelude::*,
     bevy_tnua::{
@@ -90,7 +90,7 @@ pub fn on_player_spawn(
     cmds.spawn((
         (
             Player,
-            PlayingEntity,
+            StateScoped(GameState::Playing),
             AnimationIndices::default(),
             AnimationTimer::default(),
             Flippable::default(),
@@ -98,16 +98,16 @@ pub fn on_player_spawn(
                 .map(|data| data.hp)
                 .unwrap_or(PLAYER_MAX_HEALTH),
         ),
-        SpriteSheetBundle {
+        SpriteBundle {
             texture: player_assets.texture(),
-            atlas: TextureAtlas {
-                layout: player_assets.layout(),
-                index: 0,
-            },
             transform: Transform::from_translation(
                 player_spawn_evr.read().next().unwrap().pos.extend(PLAYER_Z),
             ),
             ..default()
+        },
+        TextureAtlas {
+            layout: player_assets.layout(),
+            index: 0,
         },
         InputManagerBundle::with_map(InputMap::new([
             (PlayerAction::MoveLeft, KeyCode::KeyA),
@@ -218,7 +218,7 @@ fn player_movement(
                 .unwrap(),
         ) == Some(true)
     {
-        next_state.set(GameState::Transition);
+        next_state.set(GameState::Playing);
     }
 }
 
@@ -275,14 +275,14 @@ fn player_animation(
 pub fn player_plugin(app: &mut App) {
     app.add_event::<PlayerSpawnEvent>()
         .add_systems(
-            Startup,
+            OnEnter(GameState::Setup),
             |mut cmds: Commands,
              asset_server: Res<AssetServer>,
              mut tex_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>| {
                 cmds.insert_resource(TextureAtlasOwner::<Player>::new(
                     asset_server.load("player.png"),
                     tex_atlas_layouts.add(TextureAtlasLayout::from_grid(
-                        Vec2::new(80., 110.),
+                        UVec2::new(80, 110),
                         9,
                         3,
                         None,

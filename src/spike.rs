@@ -2,10 +2,10 @@ use {
     super::{
         asset_owners::TextureAtlasOwner,
         combat::Damage,
-        game_state::{GameState, PlayingEntity},
         level,
         tile::{Tile, TILE_SIZE, TILE_Z},
     },
+    crate::GameState,
     bevy::prelude::*,
     bevy_rapier2d::prelude::*,
 };
@@ -30,19 +30,19 @@ fn on_spike_spawn(
     for &SpikeSpawnEvent { pos, on_ceil } in spike_spawn_evr.read() {
         cmds.spawn((
             Spike,
-            PlayingEntity,
-            SpriteSheetBundle {
+            StateScoped(GameState::Playing),
+            SpriteBundle {
                 sprite: Sprite {
                     flip_y: on_ceil,
                     ..default()
                 },
                 transform: Transform::from_translation(pos.extend(SPIKE_Z)),
                 texture: tile_assets.texture(),
-                atlas: TextureAtlas {
-                    layout: tile_assets.layout(),
-                    index: 70,
-                },
                 ..default()
+            },
+            TextureAtlas {
+                layout: tile_assets.layout(),
+                index: 70,
             },
         ))
         .with_children(|parent| {

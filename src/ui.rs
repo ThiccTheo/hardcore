@@ -2,11 +2,11 @@ use {
     super::{
         asset_owners::{FontOwner, TextureAtlasOwner},
         combat::Health,
-        game_state::{GameState, PlayingEntity},
         level::LevelInfo,
         player::{self, Player, PLAYER_MAX_HEALTH},
         tile::Tile,
     },
+    crate::GameState,
     crate::RESOLUTION,
     bevy::prelude::*,
     std::cmp::Ordering,
@@ -33,7 +33,7 @@ fn spawn_hud(
             },
             ..default()
         },
-        PlayingEntity,
+        StateScoped(GameState::Playing),
     ))
     .with_children(|screen| {
         screen
@@ -63,19 +63,23 @@ fn spawn_hud(
                 ))
                 .with_children(|healthbar| {
                     for _ in 0..PLAYER_MAX_HEALTH.0 / 2 {
-                        healthbar.spawn(AtlasImageBundle {
-                            image: UiImage::new(tile_assets.texture()),
-                            style: Style {
-                                max_width: Val::Percent(100. / (PLAYER_MAX_HEALTH.0 / 2) as f32),
-                                max_height: Val::Percent(100.),
+                        healthbar.spawn((
+                            ImageBundle {
+                                image: UiImage::new(tile_assets.texture()),
+                                style: Style {
+                                    max_width: Val::Percent(
+                                        100. / (PLAYER_MAX_HEALTH.0 / 2) as f32,
+                                    ),
+                                    max_height: Val::Percent(100.),
+                                    ..default()
+                                },
                                 ..default()
                             },
-                            texture_atlas: TextureAtlas {
+                            TextureAtlas {
                                 layout: tile_assets.layout(),
                                 index: 39,
                             },
-                            ..default()
-                        });
+                        ));
                     }
                 });
                 hud.spawn(TextBundle::from_section(
@@ -117,7 +121,7 @@ fn update_hud(
 
 pub fn ui_plugin(app: &mut App) {
     app.add_systems(
-        Startup,
+        OnEnter(GameState::Setup),
         |mut cmds: Commands, asset_server: Res<AssetServer>| {
             cmds.insert_resource(FontOwner::<Ui>::new(asset_server.load("font.ttf")));
         },

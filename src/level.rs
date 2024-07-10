@@ -1,11 +1,11 @@
 use {
     super::{
         door::DoorSpawnEvent,
-        game_state::GameState,
         player::PlayerSpawnEvent,
         spike::SpikeSpawnEvent,
         tile::{TileSpawnEvent, TILE_SIZE},
     },
+    crate::GameState,
     bevy::prelude::*,
     bitflags::bitflags,
     rand::Rng,
@@ -62,6 +62,8 @@ pub struct LevelInfo {
 }
 
 impl LevelInfo {
+    const DEFAULT: Self = Self { world: 1, level: 0 };
+
     fn update(&mut self) {
         if self.level == 4 {
             self.world += 1;
@@ -76,12 +78,6 @@ impl LevelInfo {
 
     pub fn level(&self) -> u8 {
         self.level
-    }
-}
-
-impl Default for LevelInfo {
-    fn default() -> Self {
-        Self { world: 1, level: 0 }
     }
 }
 
@@ -285,7 +281,7 @@ pub fn signal_level_object_spawns(
 }
 
 pub fn level_plugin(app: &mut App) {
-    app.insert_resource(LevelInfo::default()).add_systems(
+    app.insert_resource(LevelInfo::DEFAULT).add_systems(
         OnEnter(GameState::Playing),
         (
             |mut level_info: ResMut<LevelInfo>| level_info.update(),

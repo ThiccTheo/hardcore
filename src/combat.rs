@@ -71,13 +71,13 @@ fn update_iframes(
 
     for (id, mut invincible, mut sprite) in &mut iframes_qry {
         invincible.timer.tick(dt);
-        sprite.color.set_a(f32::sin(
+        sprite.color.set_alpha(f32::sin(
             invincible.timer.elapsed_secs() * Iframes::FREQUENCY * TAU,
         ));
 
         if invincible.timer.just_finished() {
             cmds.entity(id).remove::<Iframes>();
-            sprite.color.set_a(1.);
+            sprite.color.set_alpha(1.);
         }
     }
 }
