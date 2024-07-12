@@ -6,8 +6,7 @@ use {
         player::{self, Player, PLAYER_MAX_HEALTH},
         tile::Tile,
     },
-    crate::GameState,
-    crate::RESOLUTION,
+    crate::{GameState, RESOLUTION},
     bevy::prelude::*,
     std::cmp::Ordering,
 };

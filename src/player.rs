@@ -5,7 +5,6 @@ use {
         combat::Health,
         door::Door,
         level,
-        sprite_flip::Flippable,
         tile::{TILE_SIZE, TILE_Z},
     },
     crate::GameState,
@@ -93,7 +92,6 @@ pub fn on_player_spawn(
             StateScoped(GameState::Playing),
             AnimationIndices::default(),
             AnimationTimer::default(),
-            Flippable::default(),
             persistent_player_data
                 .map(|data| data.hp)
                 .unwrap_or(PLAYER_MAX_HEALTH),
@@ -137,28 +135,31 @@ fn player_movement(
             &ActionState<PlayerAction>,
             &mut TnuaController,
             &mut TnuaSimpleAirActionsCounter,
-            &mut Flippable,
             &mut TnuaSimpleFallThroughPlatformsHelper,
             &mut TnuaProximitySensor,
             &TnuaGhostSensor,
             &AnimationIndices,
+            &mut Sprite,
+            &Health,
         ),
         With<Player>,
     >,
     door_qry: Query<(&Door, Entity), (With<Collider>, With<Sensor>)>,
     rapier_ctx: Res<RapierContext>,
     mut next_state: ResMut<NextState<GameState>>,
+    mut cmds: Commands,
 ) {
     let (
         player_id,
         player_in,
         mut player_kcc,
         mut player_air_actions_count,
-        mut player_flippable,
         mut player_ghost_platforms_helper,
         mut player_prox_sensor,
         player_ghost_sensor,
         player_animation_idxs,
+        mut player_sprite,
+        player_hp,
     ) = player_qry.single_mut();
 
     player_kcc.basis(TnuaBuiltinWalk {
@@ -172,12 +173,12 @@ fn player_movement(
             * if player_in.pressed(&PlayerAction::MoveLeft)
                 && player_in.released(&PlayerAction::MoveRight)
             {
-                player_flippable.flip_x = true;
+                player_sprite.flip_x = true;
                 -Vec3::X
             } else if player_in.pressed(&PlayerAction::MoveRight)
                 && player_in.released(&PlayerAction::MoveLeft)
             {
-                player_flippable.flip_x = false;
+                player_sprite.flip_x = false;
                 Vec3::X
             } else {
                 Vec3::ZERO
@@ -218,7 +219,8 @@ fn player_movement(
                 .unwrap(),
         ) == Some(true)
     {
-        next_state.set(GameState::Playing);
+        cmds.insert_resource(PersistentPlayerData { hp: *player_hp });
+        next_state.set(GameState::Transition);
     }
 }
 
@@ -294,14 +296,6 @@ pub fn player_plugin(app: &mut App) {
         .add_systems(
             OnEnter(GameState::Playing),
             on_player_spawn.after(level::signal_level_object_spawns),
-        )
-        .add_systems(
-            OnExit(GameState::Playing),
-            |player_qry: Query<&Health, With<Player>>, mut cmds: Commands| {
-                cmds.insert_resource(PersistentPlayerData {
-                    hp: *player_qry.single(),
-                })
-            },
         )
         .add_systems(
             Update,

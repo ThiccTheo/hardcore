@@ -7,7 +7,6 @@ mod main_camera;
 mod mouse_position;
 mod player;
 mod spike;
-mod sprite_flip;
 mod tile;
 mod ui;
 
@@ -76,7 +75,6 @@ fn main() {
             (
                 main_camera::main_camera_plugin,
                 mouse_position::mouse_position_plugin,
-                sprite_flip::sprite_flip_plugin,
                 animation::animation_plugin,
                 ui::ui_plugin,
                 combat::combat_plugin,
