@@ -1,5 +1,5 @@
 use {
-    super::{asset_owners::TextureAtlasOwner, level},
+    super::{asset_owner::TextureAtlasOwner, level},
     crate::GameState,
     bevy::prelude::*,
     bevy_rapier2d::prelude::*,

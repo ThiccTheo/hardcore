@@ -1,6 +1,6 @@
 use {
     super::{
-        asset_owners::{FontOwner, TextureAtlasOwner},
+        asset_owner::{FontOwner, TextureAtlasOwner},
         combat::Health,
         level::LevelInfo,
         player::{self, Player, PLAYER_MAX_HEALTH},

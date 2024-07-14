@@ -1,10 +1,11 @@
 use {
     super::{
         animation::{self, AnimationIndices, AnimationState, AnimationTimer},
-        asset_owners::TextureAtlasOwner,
+        asset_owner::TextureAtlasOwner,
         combat::Health,
         door::Door,
         level,
+        sprite_flip::Flippable,
         tile::{TILE_SIZE, TILE_Z},
     },
     crate::GameState,
@@ -92,6 +93,7 @@ pub fn on_player_spawn(
             StateScoped(GameState::Playing),
             AnimationIndices::default(),
             AnimationTimer::default(),
+            Flippable::default(),
             persistent_player_data
                 .map(|data| data.hp)
                 .unwrap_or(PLAYER_MAX_HEALTH),
@@ -139,8 +141,8 @@ fn player_movement(
             &mut TnuaProximitySensor,
             &TnuaGhostSensor,
             &AnimationIndices,
-            &mut Sprite,
             &Health,
+            &mut Flippable,
         ),
         With<Player>,
     >,
@@ -158,8 +160,8 @@ fn player_movement(
         mut player_prox_sensor,
         player_ghost_sensor,
         player_animation_idxs,
-        mut player_sprite,
         player_hp,
+        mut player_flippable,
     ) = player_qry.single_mut();
 
     player_kcc.basis(TnuaBuiltinWalk {
@@ -173,12 +175,12 @@ fn player_movement(
             * if player_in.pressed(&PlayerAction::MoveLeft)
                 && player_in.released(&PlayerAction::MoveRight)
             {
-                player_sprite.flip_x = true;
+                player_flippable.flip_x = true;
                 -Vec3::X
             } else if player_in.pressed(&PlayerAction::MoveRight)
                 && player_in.released(&PlayerAction::MoveLeft)
             {
-                player_sprite.flip_x = false;
+                player_flippable.flip_x = false;
                 Vec3::X
             } else {
                 Vec3::ZERO

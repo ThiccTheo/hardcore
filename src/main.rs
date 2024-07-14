@@ -1,5 +1,5 @@
 mod animation;
-mod asset_owners;
+mod asset_owner;
 mod combat;
 mod door;
 mod level;
@@ -9,6 +9,7 @@ mod player;
 mod spike;
 mod tile;
 mod ui;
+mod sprite_flip;
 
 use {
     bevy::{
@@ -76,6 +77,7 @@ fn main() {
                 main_camera::main_camera_plugin,
                 mouse_position::mouse_position_plugin,
                 animation::animation_plugin,
+                sprite_flip::sprite_flip_plugin,
                 ui::ui_plugin,
                 combat::combat_plugin,
                 level::level_plugin,

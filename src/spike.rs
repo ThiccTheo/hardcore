@@ -1,6 +1,6 @@
 use {
     super::{
-        asset_owners::TextureAtlasOwner,
+        asset_owner::TextureAtlasOwner,
         combat::Damage,
         level,
         tile::{Tile, TILE_SIZE, TILE_Z},
