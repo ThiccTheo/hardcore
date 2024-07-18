@@ -14,11 +14,9 @@ impl MousePosition {
     pub fn y(&self) -> f32 {
         self.0.y
     }
-}
 
-impl From<MousePosition> for Vec2 {
-    fn from(mouse_pos: MousePosition) -> Self {
-        mouse_pos.0
+    pub fn as_vec(&self) -> Vec2 {
+        self.0
     }
 }
 
